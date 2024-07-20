@@ -1,0 +1,17 @@
+[workspace]
+members = ["server/*","client/*", "crates/*"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.79"
+# homepage = ""
+# documentation = ""
+repository = "https://github.com/gouzil/rfuse"
+authors = ["gouzil <530971494@qq.com>"]
+license = "MIT"
+
+[workspace.dependencies]
+log = "0.4.22"
+fuser = { git = "https://github.com/cberner/fuser.git", branch="master" }
+libc = "0.2"

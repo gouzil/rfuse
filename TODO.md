@@ -1,0 +1,1 @@
+补充`check_access`, 在`create`、`opendir(这个没实现)`、`open`、`rename`、`rmdir`、`unlink`、`mkdir`、`mknod(没实现)`、`setattr`、`lookup`、`insert_link(没实现)`、`mknod(没实现)`、`symlink(没实现)`中使用

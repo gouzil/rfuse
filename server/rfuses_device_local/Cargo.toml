@@ -1,0 +1,11 @@
+[package]
+name = "rfuses_device_local"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+log.workspace = true
