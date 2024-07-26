@@ -1,3 +1,4 @@
+use core::time;
 use std::{
     collections::HashMap,
     ffi::OsStr,
@@ -14,11 +15,12 @@ use log::{debug, info};
 use crate::{
     common::{FMODE_EXEC, MAX_NAME_LENGTH},
     inode::{Inode, InodeAttributes, InodeKind},
-    remote_fs::{RemoteFileManager, RemoteFileManagerTrait},
+    remote_fs::{RemoteFileInitializeError, RemoteFileManager},
+    tmp_file::TmpFileTrait,
     utils::check_access,
 };
 
-struct RFuseFS {
+pub struct RFuseFS {
     fs_name: String, // 后期可能会有多个目录的需求，这个先保留
     source_dir: String,
     inodes: HashMap<u64, Inode>,
@@ -27,13 +29,25 @@ struct RFuseFS {
 }
 
 impl RFuseFS {
-    pub fn new(fs_name: String, direct_io: bool, source_dir: String) -> Self {
+    pub fn new(
+        fs_name: String,
+        direct_io: bool,
+        source_dir: String,
+        init_fs_func: Box<
+            dyn Fn(
+                &mut RemoteFileManager,
+                &mut HashMap<u64, Inode>,
+                String,
+            ) -> Result<(), RemoteFileInitializeError>,
+        >,
+        tmp_file_trait: Box<dyn TmpFileTrait>,
+    ) -> Self {
         Self {
             fs_name,
             source_dir,
             inodes: HashMap::new(),
             direct_io,
-            remote_file_manager: RemoteFileManager::new(),
+            remote_file_manager: RemoteFileManager::new(init_fs_func, tmp_file_trait),
         }
     }
 
@@ -65,7 +79,7 @@ impl Filesystem for RFuseFS {
 
         match self
             .remote_file_manager
-            .init_fs(&mut self.inodes, self.source_dir.clone())
+            .initialize_fs(&mut self.inodes, self.source_dir.clone())
         {
             Ok(_) => {}
             Err(e) => {
@@ -662,8 +676,8 @@ impl Filesystem for RFuseFS {
             }
         };
 
-        // TODO: 这里还需要回写修改时间什么的, 修改 inode 的时间
-        match self.remote_file_manager.write_file(ino, data) {
+        let write_time = SystemTime::now();
+        match self.remote_file_manager.write_file(ino, data, write_time) {
             Ok(_) => {}
             Err(e) => {
                 debug!("[RFuseFS][write] -> Write data. {}", e);
@@ -671,7 +685,8 @@ impl Filesystem for RFuseFS {
                 return;
             }
         };
-        inode.attr.mtime = SystemTime::now();
+        inode.attr.mtime = write_time;
+        inode.attr.ctime = write_time;
         // if data.len() + offset as usize > inode.attr.size as usize {
         //     inode.attr.size = (data.len() + offset as usize) as u64;
         // }
@@ -725,10 +740,10 @@ impl Filesystem for RFuseFS {
         parent_inode.attr.mtime = SystemTime::now();
         assert!(parent_inode.attr.kind == InodeKind::Directory);
         let path = parent_inode.attr.path.clone() + &parent_inode.attr.name;
+        // 这里的 attr 只是占位, 后续会被 RemoteFileManager 回写为真实数据
         let attr = InodeAttributes::new(name.clone(), InodeKind::File, path);
         let mut new_inode = Inode::new(parent, attr.clone());
         let new_ino = new_inode.ino;
-        // TODO: 这里应该要把权限信息啥的补上
         let new_file_meta = match self.remote_file_manager.new_file(
             new_ino,
             attr.clone(),

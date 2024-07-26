@@ -1,3 +1,5 @@
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
 pub fn check_access(
     file_uid: u32,
     file_gid: u32,
@@ -31,4 +33,12 @@ pub fn check_access(
     }
 
     return access_mask == 0;
+}
+
+pub fn i64_to_system_time(secs: i64) -> SystemTime {
+    if secs >= 0 {
+        UNIX_EPOCH + Duration::from_secs(secs as u64)
+    } else {
+        UNIX_EPOCH - Duration::from_secs((-secs) as u64)
+    }
 }
