@@ -21,7 +21,7 @@ use rfuse_core::{
 
 fn change_time(path: &str, atime: &TimeSpec, mtime: &TimeSpec) -> Result<(), TmpFileError> {
     // 将时间戳应用到文件
-    match utimensat(None, path, atime, mtime, UtimensatFlags::NoFollowSymlink) {
+    match utimensat(None, path, atime, mtime, UtimensatFlags::FollowSymlink) {
         Ok(_) => {
             debug!("Successfully set file attributes.");
             Ok(())

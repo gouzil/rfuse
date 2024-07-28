@@ -10,7 +10,12 @@ license.workspace = true
 [dependencies]
 log.workspace = true
 fuser.workspace = true
-env_logger.workspace = true # 仅限测试使用
 rfuse_core = { path = "../../crates/rfuse_core" }
 walkdir.workspace = true
 nix.workspace = true
+
+[target.'cfg(debug_assertions)'.dependencies]
+env_logger.workspace = true
+
+[target.'cfg(not(debug_assertions))'.dependencies]
+flexi_logger.workspace = true
