@@ -97,10 +97,10 @@ pub trait TmpFileTrait {
     }
 
     // 删除文件
-    fn remove_file(&self, tf: &TmpFile) -> Result<(), TmpFileError> {
+    fn remove_file(&self, tf: &TmpFile, rm_file_time: SystemTime) -> Result<(), TmpFileError> {
         warn!(
-            "[TmpFileTrait][Not Implemented] node: {:#?}, remove_file()",
-            tf
+            "[TmpFileTrait][Not Implemented] node: {:#?}, remove_file(rm_file_time: {:#?})",
+            tf, rm_file_time
         );
         Err(TmpFileError::RemoveError)
     }

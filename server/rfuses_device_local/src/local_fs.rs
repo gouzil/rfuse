@@ -1,14 +1,17 @@
 use std::{
     fs,
     io::{Read, Write},
-    os::unix::fs::{MetadataExt, PermissionsExt},
+    os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt},
     time::SystemTime,
 };
 
 use log::{debug, error};
-use nix::sys::{
-    stat::{fchmodat, utimensat, FchmodatFlags, Mode, UtimensatFlags},
-    time::TimeSpec,
+use nix::{
+    libc::O_NOATIME,
+    sys::{
+        stat::{fchmodat, utimensat, FchmodatFlags, Mode, UtimensatFlags},
+        time::TimeSpec,
+    },
 };
 
 use crate::utils::system_time_to_timespec;
@@ -219,14 +222,41 @@ impl TmpFileTrait for LocalFS {
         }
     }
 
-    fn remove_file(&self, tf: &TmpFile) -> Result<(), TmpFileError> {
+    fn remove_file(&self, tf: &TmpFile, rm_file_time: SystemTime) -> Result<(), TmpFileError> {
         let _guard = tf.lock.write().unwrap();
         match fs::remove_file(tf.path.clone() + &tf.file_name) {
-            Ok(_) => Ok(()),
+            Ok(_) => {
+                debug!(
+                    "[LocalFS][remove_file] Successfully remove file. {}",
+                    tf.path.clone() + &tf.file_name
+                );
+            }
             Err(e) => {
                 error!("[LocalFS][remove_file] Failed to remove file: {}", e);
-                Err(TmpFileError::RemoveError)
+                return Err(TmpFileError::RemoveError);
             }
+        };
+
+        // 将时间戳应用到上层文件夹
+        let file = match fs::OpenOptions::new()
+            .read(true)
+            .custom_flags(O_NOATIME)
+            .open(tf.path.clone() + tf.file_name.as_str())
+        {
+            Ok(file) => file,
+            Err(e) => {
+                error!("[LocalFS][remove_file] Failed to open file: {}", e);
+                return Err(TmpFileError::ReadError);
+            }
+        };
+
+        match change_time(
+            tf.path.as_str(),
+            &system_time_to_timespec(i64_to_system_time(file.metadata().unwrap().atime())),
+            &system_time_to_timespec(rm_file_time),
+        ) {
+            Ok(_) => Ok(()),
+            Err(e) => return Err(e),
         }
     }
 
