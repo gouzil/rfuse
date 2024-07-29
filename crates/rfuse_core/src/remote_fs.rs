@@ -192,18 +192,18 @@ impl RemoteFileManager {
         Ok(())
     }
 
-    pub fn remove_file(&mut self, ino: u64) -> Result<(), &str> {
+    pub fn remove_file(&mut self, ino: u64, rm_file_time: SystemTime) -> Result<(), &str> {
         let inode = match self.tmp_file_map.get(&ino) {
             Some(t) => t,
             None => {
                 error!(
-                    "[RemoteFileManager][remove_file]file not found, ino: {}",
-                    ino
+                    "[RemoteFileManager][remove_file]file not found, ino: {}, rm_file_time: {:?}",
+                    ino, rm_file_time
                 );
                 return Err("file not found");
             }
         };
-        match self.tmp_file_trait.remove_file(inode) {
+        match self.tmp_file_trait.remove_file(inode, rm_file_time) {
             Ok(_) => {}
             Err(e) => {
                 error!("[RemoteFileManager][remove_file] failed: {}", e);

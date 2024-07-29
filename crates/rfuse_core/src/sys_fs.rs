@@ -1,4 +1,3 @@
-use core::time;
 use std::{
     collections::HashMap,
     ffi::OsStr,
@@ -21,6 +20,7 @@ use crate::{
 };
 
 pub struct RFuseFS {
+    #[allow(dead_code)]
     fs_name: String, // 后期可能会有多个目录的需求，这个先保留
     source_dir: String,
     inodes: HashMap<u64, Inode>,
@@ -834,15 +834,15 @@ impl Filesystem for RFuseFS {
         if parent_inode.attr.permissions & libc::S_ISVTX as u16 != 0
             && uid != 0
             && uid != parent_inode.attr.uid
-        // && uid != inode.uid
+        // && uid != inode.attr.uid
         {
             reply.error(libc::EACCES);
             return;
         }
 
-        // TODO: 这里还需要回写修改时间什么的, 修改 parent_inode 的时间
+        let new_time = SystemTime::now();
         parent_inode.remove_child(ino);
-        match self.remote_file_manager.remove_file(ino) {
+        match self.remote_file_manager.remove_file(ino, new_time) {
             Ok(_) => {}
             Err(e) => {
                 debug!("[RFuseFS][unlink] -> Remove a file. {}", e);
@@ -850,6 +850,7 @@ impl Filesystem for RFuseFS {
                 return;
             }
         };
+        parent_inode.attr.mtime = new_time;
         self.inodes.remove(&ino);
         reply.ok();
     }
