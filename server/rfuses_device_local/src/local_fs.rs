@@ -256,7 +256,7 @@ impl TmpFileTrait for LocalFS {
             &system_time_to_timespec(rm_file_time),
         ) {
             Ok(_) => Ok(()),
-            Err(e) => return Err(e),
+            Err(e) => Err(e),
         }
     }
 

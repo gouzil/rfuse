@@ -1,0 +1,63 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64, aarch64]
+        build_type: [debug, release]
+    name: Ubuntu, ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        id: cargo-cache
+        with:
+            path: |
+                ~/.cargo/bin/
+                ~/.cargo/registry/index/
+                ~/.cargo/registry/cache/
+                ~/.cargo/git/db/
+                target/
+            key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: Build
+        if: matrix.build_type == 'release'
+        run: cargo build --target ${{ matrix.target }}-unknown-linux-gnu --${{ matrix.build_type }}
+      - name: Build
+        if: matrix.build_type == 'debug'
+        run: cargo build --target ${{ matrix.target }}-unknown-linux-gnu
+
+#   macos:
+#     runs-on: macos-latest
+#     strategy:
+#         matrix:
+#             target: [x86_64, aarch64]
+#             build_type: [debug, release]
+#     name: Macos, ${{ matrix.target }}
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: actions/cache@v4
+#         id: cargo-cache
+#         with:
+#             path: |
+#                 ~/.cargo/bin/
+#                 ~/.cargo/registry/index/
+#                 ~/.cargo/registry/cache/
+#                 ~/.cargo/git/db/
+#                 target/
+#             key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+#       - name: Build
+#         if: matrix.build_type == 'release'
+#         run: cargo build --target ${{ matrix.target }}-apple-darwin --${{ matrix.build_type }}
+#       - name: Build
+#         if: matrix.build_type == 'debug'
+#         run: cargo build --target ${{ matrix.target }}-apple-darwin
