@@ -1,17 +1,14 @@
 use std::{
     fs,
     io::{Read, Write},
-    os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt},
+    os::unix::fs::{MetadataExt, PermissionsExt},
     time::SystemTime,
 };
 
 use log::{debug, error};
-use nix::{
-    libc::O_NOATIME,
-    sys::{
-        stat::{fchmodat, utimensat, FchmodatFlags, Mode, UtimensatFlags},
-        time::TimeSpec,
-    },
+use nix::sys::{
+    stat::{fchmodat, utimensat, FchmodatFlags, Mode, UtimensatFlags},
+    time::TimeSpec,
 };
 
 use crate::utils::system_time_to_timespec;
@@ -134,11 +131,17 @@ impl TmpFileTrait for LocalFS {
             Err(e) => return Err(e),
         };
 
+        #[cfg(target_os = "linux")]
+        let permissions = attr.permissions as u32;
+
+        #[cfg(target_os = "macos")]
+        let permissions = attr.permissions;
+
         // 设置权限
         match fchmodat(
             None,
             full_path.as_str(),
-            Mode::from_bits_retain(attr.permissions as u32),
+            Mode::from_bits_retain(permissions),
             FchmodatFlags::FollowSymlink,
         ) {
             Ok(_) => {
@@ -240,7 +243,7 @@ impl TmpFileTrait for LocalFS {
         // 将时间戳应用到上层文件夹
         let file = match fs::OpenOptions::new()
             .read(true)
-            .custom_flags(O_NOATIME)
+            // .custom_flags(O_NOATIME)  // TODO: 只有 Linux 有
             .open(tf.path.clone() + tf.file_name.as_str())
         {
             Ok(file) => file,
