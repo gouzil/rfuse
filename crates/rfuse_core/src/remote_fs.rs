@@ -8,6 +8,12 @@ use crate::{
     tmp_file::{TmpFile, TmpFileTrait},
 };
 
+pub type InitFsFuncType = dyn Fn(
+    &mut RemoteFileManager,
+    &mut HashMap<u64, Inode>,
+    String,
+) -> Result<(), RemoteFileInitializeError>;
+
 pub enum RemoteFileInitializeError {
     PermissionError,
     Error,
@@ -24,31 +30,16 @@ impl fmt::Display for RemoteFileInitializeError {
 
 pub struct RemoteFileManager {
     pub tmp_file_map: HashMap<u64, TmpFile>,
-    pub init_fs: Box<
-        dyn Fn(
-            &mut Self,
-            &mut HashMap<u64, Inode>,
-            String,
-        ) -> Result<(), RemoteFileInitializeError>,
-    >,
+    pub init_fs: Box<InitFsFuncType>,
     pub tmp_file_trait: Box<dyn TmpFileTrait>,
 }
 
 impl RemoteFileManager {
-    pub fn new(
-        init_fs: Box<
-            dyn Fn(
-                &mut Self,
-                &mut HashMap<u64, Inode>,
-                String,
-            ) -> Result<(), RemoteFileInitializeError>,
-        >,
-        tmp_file_trait: Box<dyn TmpFileTrait>,
-    ) -> Self {
+    pub fn new(init_fs: Box<InitFsFuncType>, tmp_file_trait: Box<dyn TmpFileTrait>) -> Self {
         RemoteFileManager {
             tmp_file_map: HashMap::new(),
-            init_fs: init_fs,
-            tmp_file_trait: tmp_file_trait,
+            init_fs,
+            tmp_file_trait,
         }
     }
 
@@ -160,7 +151,7 @@ impl RemoteFileManager {
                 return Err("file not found");
             }
         };
-        match self.tmp_file_trait.set_attr(inode, &attr) {
+        match self.tmp_file_trait.set_attr(inode, attr) {
             Ok(_) => Ok(()),
             Err(e) => {
                 error!("[RemoteFileManager][set_attr] failed: {}", e);
@@ -266,7 +257,7 @@ impl RemoteFileManager {
         inodes: &mut HashMap<u64, Inode>,
         source_dir: String,
     ) -> Result<(), RemoteFileInitializeError> {
-        let init_fs = std::mem::replace(&mut self.init_fs, Box::new(|_, _, _| Ok({})));
+        let init_fs = std::mem::replace(&mut self.init_fs, Box::new(|_, _, _| Ok(())));
         init_fs(self, inodes, source_dir)
     }
 }

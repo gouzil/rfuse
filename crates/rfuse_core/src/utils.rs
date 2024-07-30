@@ -32,7 +32,7 @@ pub fn check_access(
         access_mask -= access_mask & file_mode;
     }
 
-    return access_mask == 0;
+    access_mask == 0
 }
 
 pub fn i64_to_system_time(secs: i64) -> SystemTime {

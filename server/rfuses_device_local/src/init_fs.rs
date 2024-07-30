@@ -25,7 +25,7 @@ pub fn user_defined_init_fs(
     inodes.insert(
         FUSE_ROOT_ID,
         root_node(
-            &"",
+            "",
             // self.mountpoint.clone(),
             "/".to_string(),
             source_dir_matedata.permissions().mode() as u16,
@@ -66,7 +66,7 @@ pub fn user_defined_init_fs(
             .replace(&entry.file_name().to_str().unwrap().to_string(), "");
         debug!(
             "mount_path: {:?}",
-            path.clone() + &entry.file_name().to_str().unwrap().to_string()
+            path.clone() + entry.file_name().to_str().unwrap()
         );
 
         // 这里插入子文件夹下所有文件的 ino，因为只有文件夹才有子文件，所以在下面那个函数插入
@@ -74,7 +74,7 @@ pub fn user_defined_init_fs(
 
         // 文件类型
         let kind = if entry.file_type().is_dir() {
-            for sub_entry in WalkDir::new(&entry.path())
+            for sub_entry in WalkDir::new(entry.path())
                 .max_depth(1)
                 .into_iter()
                 .filter_map(|e| e.ok())

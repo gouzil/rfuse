@@ -14,7 +14,7 @@ use log::{debug, info};
 use crate::{
     common::{FMODE_EXEC, MAX_NAME_LENGTH},
     inode::{Inode, InodeAttributes, InodeKind},
-    remote_fs::{RemoteFileInitializeError, RemoteFileManager},
+    remote_fs::{InitFsFuncType, RemoteFileManager},
     tmp_file::TmpFileTrait,
     utils::check_access,
 };
@@ -33,13 +33,7 @@ impl RFuseFS {
         fs_name: String,
         direct_io: bool,
         source_dir: String,
-        init_fs_func: Box<
-            dyn Fn(
-                &mut RemoteFileManager,
-                &mut HashMap<u64, Inode>,
-                String,
-            ) -> Result<(), RemoteFileInitializeError>,
-        >,
+        init_fs_func: Box<InitFsFuncType>,
         tmp_file_trait: Box<dyn TmpFileTrait>,
     ) -> Self {
         Self {
@@ -261,7 +255,6 @@ impl Filesystem for RFuseFS {
             }
             None => {
                 reply.error(ENOENT);
-                return;
             }
         };
     }
@@ -363,7 +356,7 @@ impl Filesystem for RFuseFS {
                 return;
             }
             // 文件夹不为空
-            if inode.children_ino.len() > 0 {
+            if !inode.children_ino.is_empty() {
                 reply.error(libc::ENOTEMPTY);
                 return;
             }
@@ -514,7 +507,7 @@ impl Filesystem for RFuseFS {
 
         debug!(
             "[RFuseFS][rename] -> flags: {}",
-            flags & libc::RENAME_EXCHANGE as u32
+            flags & libc::RENAME_EXCHANGE
         );
 
         // "Sticky bit" handling
@@ -578,7 +571,7 @@ impl Filesystem for RFuseFS {
         // TODO: 后续可以支持一下这个用的不多，它是用来交换两个文件夹名字的
         // https://github.com/cberner/fuser/blob/99aa528056f02cbcfc5283a16c6f05643f536271/examples/simple.rs#L1172-L1220
         #[cfg(target_os = "linux")]
-        if flags & libc::RENAME_EXCHANGE as u32 != 0 {
+        if flags & libc::RENAME_EXCHANGE != 0 {
             reply.error(libc::ENOSYS);
             return;
         }
@@ -588,7 +581,7 @@ impl Filesystem for RFuseFS {
         if let Some(new_name_attrs) = self.lookup_name(newparent, newname.to_str().unwrap()) {
             let existing_inode = self.inodes.get(&new_name_attrs).unwrap();
             if existing_inode.attr.kind == InodeKind::Directory
-                && existing_inode.children_ino.len() > 0
+                && !existing_inode.children_ino.is_empty()
             {
                 reply.error(libc::ENOTEMPTY);
                 return;
