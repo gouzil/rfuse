@@ -115,10 +115,10 @@ pub trait TmpFileTrait {
     }
 
     // 删除目录
-    fn remove_dir(&self, tf: &TmpFile) -> Result<(), TmpFileError> {
+    fn remove_dir(&self, tf: &TmpFile, rm_dir_time: SystemTime) -> Result<(), TmpFileError> {
         warn!(
-            "[TmpFileTrait][Not Implemented] node: {:#?}, remove_dir()",
-            tf
+            "[TmpFileTrait][Not Implemented] node: {:#?}, remove_dir(rm_dir_time: {:#?})",
+            tf, rm_dir_time
         );
         Err(TmpFileError::RemoveDirError)
     }
