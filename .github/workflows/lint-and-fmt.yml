@@ -32,6 +32,10 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: install package
+        run: apt-get install fuse3 libfuse3-dev
+      - name: update cargo to 1.80.0
+        run: rustup update
       - name: Format with rustfmt
         run: |
           cargo fmt --all -- --check

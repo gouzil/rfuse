@@ -16,7 +16,7 @@ jobs:
       matrix:
         target: [x86_64, aarch64]
         build_type: [debug, release]
-    name: Ubuntu, ${{ matrix.target }}
+    name: Ubuntu, ${{ matrix.target }}. ${{ matrix.build_type }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
@@ -29,6 +29,13 @@ jobs:
                 ~/.cargo/git/db/
                 target/
             key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - name: update cargo to 1.80.0
+        run: rustup update
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rust-src, nightly
       - name: Build
         if: matrix.build_type == 'release'
         run: cargo build --target ${{ matrix.target }}-unknown-linux-gnu --${{ matrix.build_type }}
@@ -37,11 +44,11 @@ jobs:
         run: cargo build --target ${{ matrix.target }}-unknown-linux-gnu
 
 #   macos:
-#     runs-on: macos-latest
 #     strategy:
 #         matrix:
 #             target: [x86_64, aarch64]
 #             build_type: [debug, release]
+#     runs-on: macos-latest
 #     name: Macos, ${{ matrix.target }}
 #     steps:
 #       - uses: actions/checkout@v4
