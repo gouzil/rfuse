@@ -42,7 +42,16 @@ jobs:
                 target/
             key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: install package
-        run: sudo apt-get install fuse3 libfuse3-dev
+        if: matrix.target == 'aarch64'
+        run: |
+            sudo dpkg --add-architecture ${{ matrix.target }}
+            sudo apt-get update
+            sudo apt-get install fuse3:${{ matrix.target }} libfuse3-dev:${{ matrix.target }}
+      - name: install package
+        if: matrix.target == 'x86_64'
+        run: |
+            sudo apt-get update
+            sudo apt-get install fuse3 libfuse3-dev
       - name: Build
         if: matrix.build_type == 'release'
         run: cargo build --target ${{ matrix.target }}-unknown-linux-gnu --${{ matrix.build_type }}
