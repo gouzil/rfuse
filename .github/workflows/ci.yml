@@ -10,54 +10,24 @@ on:
 
 
 jobs:
-#   linux:
-#     runs-on: ubuntu-latest
-#     strategy:
-#       max-parallel: 1
-#       matrix:
-#         target: [x86_64]
-#         build_type: [debug, release]
-#     name: Ubuntu, ${{ matrix.target }}. ${{ matrix.build_type }}
-#     steps:
-#       - uses: actions/checkout@v4
-#       - name: update cargo to 1.80.0
-#         run: rustup update
-#       - name: Install toolchain
-#         uses: dtolnay/rust-toolchain@stable
-#         with:
-#             targets: ${{ matrix.target }}-unknown-linux-gnu
-#             toolchain: stable
-#             components: rust-src
-#       - uses: actions/cache@v4
-#         id: cargo-cache
-#         with:
-#             path: |
-#                 ~/.cargo/bin/
-#                 ~/.cargo/registry/index/
-#                 ~/.cargo/registry/cache/
-#                 ~/.cargo/git/db/
-#                 target/
-#             key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-#       - name: install package
-#         run: |
-#             sudo apt-get update
-#             sudo apt-get install fuse3 libfuse3-dev
-#       - name: Build
-#         if: matrix.build_type == 'release'
-#         run: cargo build --target ${{ matrix.target }}-unknown-linux-gnu --${{ matrix.build_type }}
-#       - name: Build
-#         if: matrix.build_type == 'debug'
-#         run: cargo build --target ${{ matrix.target }}-unknown-linux-gnu
-
-  macos:
+  linux:
+    runs-on: ubuntu-latest
     strategy:
-        matrix:
-            os: [macos-latest, macos-13]
-            build_type: [debug, release]
-    runs-on: macos-latest
-    name: Macos, ${{ matrix.os }}. ${{ matrix.build_type }}
+      max-parallel: 1
+      matrix:
+        target: [x86_64]
+        build_type: [debug, release]
+    name: Ubuntu, ${{ matrix.target }}. ${{ matrix.build_type }}
     steps:
       - uses: actions/checkout@v4
+      - name: update cargo to 1.80.0
+        run: rustup update
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+            targets: ${{ matrix.target }}-unknown-linux-gnu
+            toolchain: stable
+            components: rust-src
       - uses: actions/cache@v4
         id: cargo-cache
         with:
@@ -70,10 +40,40 @@ jobs:
             key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: install package
         run: |
-            brew install macfuse
+            sudo apt-get update
+            sudo apt-get install fuse3 libfuse3-dev
       - name: Build
         if: matrix.build_type == 'release'
-        run: cargo build --${{ matrix.build_type }}
+        run: cargo build --target ${{ matrix.target }}-unknown-linux-gnu --${{ matrix.build_type }}
       - name: Build
         if: matrix.build_type == 'debug'
-        run: cargo build
+        run: cargo build --target ${{ matrix.target }}-unknown-linux-gnu
+
+#   macos:
+#     strategy:
+#         matrix:
+#             os: [macos-latest, macos-13]
+#             build_type: [debug, release]
+#     runs-on: macos-latest
+#     name: Macos, ${{ matrix.os }}. ${{ matrix.build_type }}
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: actions/cache@v4
+#         id: cargo-cache
+#         with:
+#             path: |
+#                 ~/.cargo/bin/
+#                 ~/.cargo/registry/index/
+#                 ~/.cargo/registry/cache/
+#                 ~/.cargo/git/db/
+#                 target/
+#             key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+#       - name: install package
+#         run: |
+#             brew install macfuse
+#       - name: Build
+#         if: matrix.build_type == 'release'
+#         run: cargo build --${{ matrix.build_type }}
+#       - name: Build
+#         if: matrix.build_type == 'debug'
+#         run: cargo build
