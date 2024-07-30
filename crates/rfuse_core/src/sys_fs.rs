@@ -468,7 +468,8 @@ impl Filesystem for RFuseFS {
         name: &OsStr,
         newparent: u64,
         newname: &OsStr,
-        flags: u32,
+        #[cfg(target_os = "linux")] flags: u32,
+        #[cfg(not(target_os = "linux"))] _flags: u32,
         reply: fuser::ReplyEmpty,
     ) {
         debug!("[RFuseFS][rename] -> Rename a file.");
@@ -505,6 +506,7 @@ impl Filesystem for RFuseFS {
             return;
         }
 
+        #[cfg(target_os = "linux")]
         debug!(
             "[RFuseFS][rename] -> flags: {}",
             flags & libc::RENAME_EXCHANGE
