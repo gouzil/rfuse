@@ -68,7 +68,6 @@ impl Filesystem for RFuseFS {
         _req: &Request,
         _config: &mut fuser::KernelConfig,
     ) -> Result<(), libc::c_int> {
-        // TODO: 需要处理两两边同时修改的问题
         info!("[RFuseFS][init] -> Initialize filesystem.");
 
         match self
@@ -386,9 +385,9 @@ impl Filesystem for RFuseFS {
             return;
         }
 
-        // TODO: 这里还需要回写修改时间什么的, 修改 parent_inode 的时间
+        let new_time = SystemTime::now();
         parent_inode.remove_child(ino);
-        match self.remote_file_manager.remove_dir(ino) {
+        match self.remote_file_manager.remove_dir(ino, new_time) {
             Ok(_) => {}
             Err(e) => {
                 debug!("[RFuseFS][rmdir] -> Remove a directory. {}", e);
@@ -396,6 +395,8 @@ impl Filesystem for RFuseFS {
                 return;
             }
         };
+        parent_inode.attr.mtime = new_time;
+        parent_inode.attr.ctime = new_time;
         self.inodes.remove(&ino);
         reply.ok();
     }
@@ -846,6 +847,7 @@ impl Filesystem for RFuseFS {
             }
         };
         parent_inode.attr.mtime = new_time;
+        parent_inode.attr.ctime = new_time;
         self.inodes.remove(&ino);
         reply.ok();
     }

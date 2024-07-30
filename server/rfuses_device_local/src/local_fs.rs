@@ -241,21 +241,17 @@ impl TmpFileTrait for LocalFS {
         };
 
         // 将时间戳应用到上层文件夹
-        let file = match fs::OpenOptions::new()
-            .read(true)
-            // .custom_flags(O_NOATIME)  // TODO: 只有 Linux 有
-            .open(tf.path.clone() + tf.file_name.as_str())
-        {
+        let file_meta = match fs::metadata(tf.path.clone()) {
             Ok(file) => file,
             Err(e) => {
-                error!("[LocalFS][remove_file] Failed to open file: {}", e);
+                error!("[LocalFS][remove_file] Failed to get file meta: {}", e);
                 return Err(TmpFileError::ReadError);
             }
         };
 
         match change_time(
             tf.path.as_str(),
-            &system_time_to_timespec(i64_to_system_time(file.metadata().unwrap().atime())),
+            &system_time_to_timespec(i64_to_system_time(file_meta.atime())),
             &system_time_to_timespec(rm_file_time),
         ) {
             Ok(_) => Ok(()),
@@ -319,14 +315,37 @@ impl TmpFileTrait for LocalFS {
         }
     }
 
-    fn remove_dir(&self, tf: &TmpFile) -> Result<(), TmpFileError> {
+    fn remove_dir(&self, tf: &TmpFile, rm_dir_time: SystemTime) -> Result<(), TmpFileError> {
         let _guard = tf.lock.write().unwrap();
         match fs::remove_dir_all(tf.path.clone() + &tf.file_name) {
-            Ok(_) => Ok(()),
+            Ok(_) => {
+                debug!(
+                    "[LocalFS][remove_dir] Successfully remove dir. {}",
+                    tf.path.clone() + &tf.file_name
+                );
+            }
             Err(e) => {
                 error!("[LocalFS][remove_dir] Failed to remove dir: {}", e);
-                Err(TmpFileError::RemoveDirError)
+                return Err(TmpFileError::RemoveDirError);
             }
+        };
+
+        // 将时间戳应用到上层文件夹
+        let file_meta = match fs::metadata(tf.path.clone()) {
+            Ok(file) => file,
+            Err(e) => {
+                error!("[LocalFS][remove_dir] Failed to get meta dir: {}", e);
+                return Err(TmpFileError::RemoveDirError);
+            }
+        };
+
+        match change_time(
+            tf.path.as_str(),
+            &system_time_to_timespec(i64_to_system_time(file_meta.atime())),
+            &system_time_to_timespec(rm_dir_time),
+        ) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e),
         }
     }
 }
