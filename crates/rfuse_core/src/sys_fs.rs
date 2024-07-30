@@ -505,6 +505,7 @@ impl Filesystem for RFuseFS {
             return;
         }
 
+        #[cfg(target_os = "linux")]
         debug!(
             "[RFuseFS][rename] -> flags: {}",
             flags & libc::RENAME_EXCHANGE
