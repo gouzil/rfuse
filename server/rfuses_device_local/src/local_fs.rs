@@ -182,19 +182,55 @@ impl TmpFileTrait for LocalFS {
         Ok(())
     }
 
-    fn rename(&self, tf: &TmpFile, new_path: String) -> Result<(), TmpFileError> {
+    fn rename(
+        &self,
+        tf: &TmpFile,
+        new_path: String,
+        rename_time: SystemTime,
+    ) -> Result<(), TmpFileError> {
         let _guard = tf.lock.write().unwrap();
         debug!(
             "[LocalFS][rename] file from {} to {}",
             tf.path.clone() + &tf.file_name,
             new_path
         );
-        match fs::rename(tf.path.clone() + &tf.file_name, new_path) {
-            Ok(_) => Ok(()),
+        // 重命名文件
+        match fs::rename(tf.path.clone() + &tf.file_name, &new_path) {
+            Ok(_) => {}
             Err(e) => {
                 error!("[LocalFS][rename] Failed to rename file: {}", e);
-                Err(TmpFileError::RenameError)
+                return Err(TmpFileError::RenameError);
             }
+        };
+
+        let file_meta = match fs::metadata(&new_path) {
+            Ok(file) => file,
+            Err(e) => {
+                error!("[LocalFS][rename] Failed to get file meta: {}", e);
+                return Err(TmpFileError::ReadError);
+            }
+        };
+
+        // 修改重命名后的文件时间
+        match change_time(
+            new_path.as_str(),
+            &system_time_to_timespec(i64_to_system_time(file_meta.atime())),
+            &system_time_to_timespec(rename_time),
+        ) {
+            Ok(_) => {}
+            Err(e) => {
+                return Err(e);
+            }
+        };
+
+        // 将时间戳应用到原地址的上层文件夹
+        match change_time(
+            tf.path.as_str(),
+            &system_time_to_timespec(i64_to_system_time(file_meta.atime())),
+            &system_time_to_timespec(rename_time),
+        ) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e),
         }
     }
 
