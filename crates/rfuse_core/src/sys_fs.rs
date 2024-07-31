@@ -12,7 +12,7 @@ use libc::ENOENT;
 use log::{debug, info};
 
 use crate::{
-    common::{FMODE_EXEC, MAX_NAME_LENGTH},
+    common::{FMODE_EXEC, MAX_NAME_LENGTH, RFUSE_S_ISVTX},
     inode::{Inode, InodeAttributes, InodeKind},
     remote_fs::{InitFsFuncType, RemoteFileManager},
     tmp_file::TmpFileTrait,
@@ -60,6 +60,14 @@ impl RFuseFS {
     pub fn clean_inode(&mut self) {
         self.inodes.clear();
     }
+
+    pub fn get_inode(&self, inode: u64) -> Option<&Inode> {
+        self.inodes.get(&inode)
+    }
+
+    pub fn write_inode(&mut self, inode: &Inode) {
+        self.inodes.insert(inode.ino, inode.clone());
+    }
 }
 
 impl Filesystem for RFuseFS {
@@ -91,7 +99,7 @@ impl Filesystem for RFuseFS {
             return;
         }
 
-        let parent_inode = self.inodes.get(&parent).unwrap();
+        let parent_inode = self.get_inode(parent).unwrap();
         if !check_access(
             parent_inode.attr.uid,
             parent_inode.attr.gid,
@@ -111,7 +119,7 @@ impl Filesystem for RFuseFS {
         // );
         match self.lookup_name(parent, &name) {
             Some(ino) => {
-                let inode = self.inodes.get(&ino).unwrap();
+                let inode = self.get_inode(ino).unwrap();
                 reply.entry(&Duration::new(0, 0), &inode.file_attr(), 0)
             }
             None => reply.error(ENOENT),
@@ -120,7 +128,7 @@ impl Filesystem for RFuseFS {
 
     fn getattr(&mut self, _req: &Request, ino: u64, _fh: Option<u64>, reply: ReplyAttr) {
         // info!("[RFuseFS][getattr] -> Get attributes of a file.");
-        match self.inodes.get(&ino) {
+        match self.get_inode(ino) {
             Some(inode) => {
                 // debug!(
                 //     "[RFuseFS][getattr] -> Get file attributes. {}",
@@ -275,7 +283,7 @@ impl Filesystem for RFuseFS {
         //     reply.error(EACCES);
         //     return;
         // }
-        let file_size = match self.inodes.get(&ino) {
+        let file_size = match self.get_inode(ino) {
             Some(inode) => {
                 debug!("[RFuseFS][read] -> Read data. {}", inode.attr.name.clone());
                 inode.attr.size
@@ -312,16 +320,20 @@ impl Filesystem for RFuseFS {
         mut reply: ReplyDirectory,
     ) {
         // info!("[RFuseFS][readdir] -> Read directory entries.");
-        let inode = self.inodes.get(&ino).unwrap();
+        let inode = self.get_inode(ino).unwrap();
         let mut entires = vec![
             (ino, FileType::Directory, ".".to_owned()),
             (ino, FileType::Directory, "..".to_owned()),
         ];
+
         let children: Vec<(u64, FileType, String)> = inode
             .children_ino
+            .clone()
             .iter()
-            .map(|ino| self.inodes.get(ino).unwrap())
-            .map(|inode| (inode.ino, inode.attr.kind.into(), inode.attr.name.clone()))
+            .map(|ino| {
+                let inode = self.get_inode(*ino).unwrap();
+                (inode.ino, inode.attr.kind.into(), inode.attr.name.clone())
+            })
             .collect();
 
         entires.extend(children);
@@ -347,20 +359,18 @@ impl Filesystem for RFuseFS {
         };
 
         // 做一些异常处理
-        {
-            let inode = self.inodes.get(&ino).unwrap();
-            // 不是文件夹类型
-            if inode.attr.kind != InodeKind::Directory {
-                reply.error(libc::ENOTDIR);
-                return;
-            }
-            // 文件夹不为空
-            if !inode.children_ino.is_empty() {
-                reply.error(libc::ENOTEMPTY);
-                return;
-            }
+        let inode = self.get_inode(ino).unwrap();
+        // 不是文件夹类型
+        if inode.attr.kind != InodeKind::Directory {
+            reply.error(libc::ENOTDIR);
+            return;
         }
-        let parent_inode = self.inodes.get_mut(&parent).unwrap();
+        // 文件夹不为空
+        if !inode.children_ino.is_empty() {
+            reply.error(libc::ENOTEMPTY);
+            return;
+        }
+        let mut parent_inode = self.get_inode(parent).unwrap().clone();
 
         // 确认是否有当前文件夹权限
         if !check_access(
@@ -376,10 +386,10 @@ impl Filesystem for RFuseFS {
         }
 
         // "Sticky bit" handling
-        if parent_inode.attr.permissions & libc::S_ISVTX as u16 != 0
+        if parent_inode.attr.permissions & RFUSE_S_ISVTX != 0
             && req.uid() != 0
             && req.uid() != parent_inode.attr.uid
-        // && req.uid() != inode.attr.uid
+            && req.uid() != inode.attr.uid
         {
             reply.error(libc::EACCES);
             return;
@@ -397,6 +407,7 @@ impl Filesystem for RFuseFS {
         };
         parent_inode.attr.mtime = new_time;
         parent_inode.attr.ctime = new_time;
+        self.write_inode(&parent_inode);
         self.inodes.remove(&ino);
         reply.ok();
     }
@@ -476,8 +487,8 @@ impl Filesystem for RFuseFS {
         debug!("[RFuseFS][rename] -> Rename a file.");
 
         // 旧文件的inode
-        let inode = match self.lookup_name(parent, name.to_str().unwrap()) {
-            Some(ino) => self.inodes.get(&ino).unwrap().clone(),
+        let mut inode = match self.lookup_name(parent, name.to_str().unwrap()) {
+            Some(ino) => self.get_inode(ino).unwrap().clone(),
             None => {
                 reply.error(libc::ENOENT);
                 return;
@@ -485,9 +496,8 @@ impl Filesystem for RFuseFS {
         };
 
         // 新文件的inode
-        let name = name.to_str().unwrap().to_string();
-        let parent_inode = match self.lookup_name(parent, &name) {
-            Some(ino) => self.inodes.get_mut(&ino).unwrap(),
+        let mut parent_inode = match self.get_inode(parent) {
+            Some(ino) => ino.clone(),
             None => {
                 reply.error(libc::ENOENT);
                 return;
@@ -514,7 +524,7 @@ impl Filesystem for RFuseFS {
         );
 
         // "Sticky bit" handling
-        if parent_inode.attr.permissions & libc::S_ISVTX as u16 != 0
+        if parent_inode.attr.permissions & RFUSE_S_ISVTX != 0
             && req.uid() != 0
             && req.uid() != parent_inode.attr.uid
             && req.uid() != inode.attr.uid
@@ -523,26 +533,26 @@ impl Filesystem for RFuseFS {
             return;
         }
 
-        // 锁定新文件
         let new_name = newname.to_str().unwrap().to_string();
         if self.lookup_name(parent, &new_name).is_some() {
             reply.error(libc::EEXIST);
             return;
         }
 
-        debug!(
-            "[RFuseFS][rename] -> Rename a file. {} -> {}",
-            name, new_name
-        );
-
         // 新的父文件夹
-        let new_parent_inode = match self.inodes.get(&newparent) {
-            Some(inode) => inode,
+        let mut new_parent_inode = match self.get_inode(newparent) {
+            Some(inode) => inode.clone(),
             None => {
                 reply.error(libc::ENOENT);
                 return;
             }
         };
+
+        debug!(
+            "[RFuseFS][rename] -> Rename a file. {} -> {}",
+            inode.attr.path.clone() + &inode.attr.name,
+            new_parent_inode.attr.path.clone() + &new_parent_inode.attr.name + &new_name
+        );
 
         // 确认是否有新的文件夹的权限
         if !check_access(
@@ -558,9 +568,9 @@ impl Filesystem for RFuseFS {
         }
 
         // "Sticky bit" handling in new_parent
-        if new_parent_inode.attr.permissions & libc::S_ISVTX as u16 != 0 {
+        if new_parent_inode.attr.permissions & RFUSE_S_ISVTX != 0 {
             if let Some(existing_attrs) = self.lookup_name(newparent, newname.to_str().unwrap()) {
-                let existing_inode = self.inodes.get(&existing_attrs).unwrap();
+                let existing_inode = self.get_inode(existing_attrs).unwrap();
                 if req.uid() != 0
                     && req.uid() != new_parent_inode.attr.uid
                     && req.uid() != existing_inode.attr.uid
@@ -582,7 +592,7 @@ impl Filesystem for RFuseFS {
         // 这里好像是不为空的文件夹不允许改名
         // Only overwrite an existing directory if it's empty
         if let Some(new_name_attrs) = self.lookup_name(newparent, newname.to_str().unwrap()) {
-            let existing_inode = self.inodes.get(&new_name_attrs).unwrap();
+            let existing_inode = self.get_inode(new_name_attrs).unwrap();
             if existing_inode.attr.kind == InodeKind::Directory
                 && !existing_inode.children_ino.is_empty()
             {
@@ -608,25 +618,42 @@ impl Filesystem for RFuseFS {
             return;
         }
 
-        // TODO: 这里还需要回写修改时间什么的，新旧文件夹的修改时间都需要修改，不过他们的时间理论上应该是同一个
         // 真正修改文件
-        {
-            let mut_inode = self.inodes.get_mut(&inode.ino).unwrap();
-            mut_inode.attr.name = new_name.clone();
-            mut_inode.attr.mtime = SystemTime::now();
-            match self.remote_file_manager.rename(
-                inode.ino,
-                new_name,
-                self.source_dir.clone() + &inode.attr.path,
-            ) {
-                Ok(_) => {}
-                Err(e) => {
-                    debug!("[RFuseFS][rename] -> Rename a file. {}", e);
-                    reply.error(libc::EIO);
-                    return;
-                }
-            };
-        }
+        let new_time = SystemTime::now();
+        let new_path = new_parent_inode.attr.path.clone() + &new_parent_inode.attr.name + "/";
+        match self.remote_file_manager.rename(
+            inode.ino,
+            new_name.clone(),
+            self.source_dir.clone() + &new_path,
+            new_time,
+        ) {
+            Ok(_) => {}
+            Err(e) => {
+                debug!("[RFuseFS][rename] -> Rename a file. {}", e);
+                reply.error(libc::EIO);
+                return;
+            }
+        };
+
+        // 修改为新的名字
+        inode.attr.name = new_name;
+        inode.attr.path = new_path;
+        // 修改时间
+        inode.attr.mtime = new_time;
+        inode.attr.ctime = new_time;
+        // 回写到缓存
+        self.write_inode(&inode);
+        // 删除旧文件夹的内容
+        parent_inode.remove_child(inode.ino);
+        parent_inode.attr.mtime = new_time;
+        parent_inode.attr.ctime = new_time;
+        self.write_inode(&parent_inode);
+        // 更新新文件夹的内容
+        new_parent_inode.children_ino.push(inode.ino);
+        new_parent_inode.attr.mtime = new_time;
+        new_parent_inode.attr.ctime = new_time;
+        self.write_inode(&new_parent_inode);
+
         reply.ok();
     }
 
@@ -772,7 +799,7 @@ impl Filesystem for RFuseFS {
     // 校验文件权限
     fn access(&mut self, req: &Request<'_>, ino: u64, mask: i32, reply: fuser::ReplyEmpty) {
         info!("[RFuseFS][access] -> Check file access permissions.");
-        let inode = self.inodes.get(&ino).unwrap();
+        let inode = self.get_inode(ino).unwrap();
         let mode = inode.attr.permissions;
         if check_access(
             inode.attr.uid,
@@ -827,7 +854,7 @@ impl Filesystem for RFuseFS {
 
         let uid = req.uid();
         // "Sticky bit" handling
-        if parent_inode.attr.permissions & libc::S_ISVTX as u16 != 0
+        if parent_inode.attr.permissions & RFUSE_S_ISVTX != 0
             && uid != 0
             && uid != parent_inode.attr.uid
         // && uid != inode.attr.uid

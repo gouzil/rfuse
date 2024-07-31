@@ -79,10 +79,15 @@ pub trait TmpFileTrait {
     }
 
     // 修改文件名
-    fn rename(&self, tf: &TmpFile, new_path: String) -> Result<(), TmpFileError> {
+    fn rename(
+        &self,
+        tf: &TmpFile,
+        new_path: String,
+        rename_time: SystemTime,
+    ) -> Result<(), TmpFileError> {
         warn!(
-            "[TmpFileTrait][Not Implemented] node: {:#?}, rename(new_path: {:#?})",
-            tf, new_path
+            "[TmpFileTrait][Not Implemented] node: {:#?}, rename(new_path: {:#?}, rename_time: {:#?})",
+            tf, new_path, rename_time
         );
         Err(TmpFileError::RenameError)
     }

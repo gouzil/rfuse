@@ -160,7 +160,13 @@ impl RemoteFileManager {
         }
     }
 
-    pub fn rename(&mut self, ino: u64, new_name: String, new_path: String) -> Result<(), &str> {
+    pub fn rename(
+        &mut self,
+        ino: u64,
+        new_name: String,
+        new_path: String,
+        rename_time: SystemTime,
+    ) -> Result<(), &str> {
         let inode = match self.tmp_file_map.get_mut(&ino) {
             Some(t) => t,
             None => {
@@ -170,7 +176,7 @@ impl RemoteFileManager {
         };
         match self
             .tmp_file_trait
-            .rename(inode, new_path.clone() + new_name.as_str())
+            .rename(inode, new_path.clone() + new_name.as_str(), rename_time)
         {
             Ok(_) => {}
             Err(e) => {
