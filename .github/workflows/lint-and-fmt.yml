@@ -17,8 +17,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: update cargo to 1.80.0
-        run: rustup update
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
