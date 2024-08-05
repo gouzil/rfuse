@@ -19,4 +19,3 @@ ctrlc.workspace = true
 
 [target.'cfg(debug_assertions)'.dependencies]
 env_logger.workspace = true
-
