@@ -11,9 +11,11 @@ license.workspace = true
 log.workspace = true
 fuser.workspace = true
 rfuse_core = { path = "../../crates/rfuse_core" }
+rfuse_device_disk = { path = "../../crates/rfuse_device_disk", features = ["local"]}
 walkdir.workspace = true
 nix.workspace = true
 flexi_logger.workspace = true
+ctrlc.workspace = true
 
 [target.'cfg(debug_assertions)'.dependencies]
 env_logger.workspace = true

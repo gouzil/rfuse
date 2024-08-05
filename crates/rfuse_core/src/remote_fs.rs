@@ -9,10 +9,12 @@ use crate::{
 };
 
 pub type InitFsFuncType = dyn Fn(
-    &mut RemoteFileManager,
-    &mut HashMap<u64, Inode>,
-    String,
-) -> Result<(), RemoteFileInitializeError>;
+        &mut RemoteFileManager,
+        &mut HashMap<u64, Inode>,
+        String,
+    ) -> Result<(), RemoteFileInitializeError>
+    + 'static
+    + Send;
 
 pub enum RemoteFileInitializeError {
     PermissionError,
@@ -97,7 +99,7 @@ impl RemoteFileManager {
         &mut self,
         ino: u64,
         data: &[u8],
-        write_time: SystemTime,
+        write_time: &SystemTime,
     ) -> Result<(), &str> {
         let tmp = match self.tmp_file_map.get(&ino) {
             Some(t) => t,
@@ -165,7 +167,7 @@ impl RemoteFileManager {
         ino: u64,
         new_name: String,
         new_path: String,
-        rename_time: SystemTime,
+        rename_time: &SystemTime,
     ) -> Result<(), &str> {
         let inode = match self.tmp_file_map.get_mut(&ino) {
             Some(t) => t,
@@ -189,7 +191,7 @@ impl RemoteFileManager {
         Ok(())
     }
 
-    pub fn remove_file(&mut self, ino: u64, rm_file_time: SystemTime) -> Result<(), &str> {
+    pub fn remove_file(&mut self, ino: u64, rm_file_time: &SystemTime) -> Result<(), &str> {
         let inode = match self.tmp_file_map.get(&ino) {
             Some(t) => t,
             None => {
@@ -236,7 +238,7 @@ impl RemoteFileManager {
         Ok(dir)
     }
 
-    pub fn remove_dir(&mut self, ino: u64, rm_dir_time: SystemTime) -> Result<(), &str> {
+    pub fn remove_dir(&mut self, ino: u64, rm_dir_time: &SystemTime) -> Result<(), &str> {
         let inode = match self.tmp_file_map.get(&ino) {
             Some(t) => t,
             None => {

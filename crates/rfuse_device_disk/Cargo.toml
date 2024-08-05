@@ -1,0 +1,19 @@
+[package]
+name = "rfuse_device_disk"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[features]
+default = ["local"]
+mem = []
+local = ["walkdir", "nix"]
+
+[dependencies]
+log.workspace = true
+walkdir = { workspace = true, optional = true }
+nix = { workspace = true, optional = true }
+rfuse_core = { path = "../../crates/rfuse_core" }

@@ -34,7 +34,7 @@ impl RFuseFS {
         direct_io: bool,
         source_dir: String,
         init_fs_func: Box<InitFsFuncType>,
-        tmp_file_trait: Box<dyn TmpFileTrait>,
+        tmp_file_trait: Box<dyn TmpFileTrait + 'static + Send>,
     ) -> Self {
         Self {
             fs_name,
@@ -397,7 +397,7 @@ impl Filesystem for RFuseFS {
 
         let new_time = SystemTime::now();
         parent_inode.remove_child(ino);
-        match self.remote_file_manager.remove_dir(ino, new_time) {
+        match self.remote_file_manager.remove_dir(ino, &new_time) {
             Ok(_) => {}
             Err(e) => {
                 debug!("[RFuseFS][rmdir] -> Remove a directory. {}", e);
@@ -625,7 +625,7 @@ impl Filesystem for RFuseFS {
             inode.ino,
             new_name.clone(),
             self.source_dir.clone() + &new_path,
-            new_time,
+            &new_time,
         ) {
             Ok(_) => {}
             Err(e) => {
@@ -700,7 +700,7 @@ impl Filesystem for RFuseFS {
         };
 
         let write_time = SystemTime::now();
-        match self.remote_file_manager.write_file(ino, data, write_time) {
+        match self.remote_file_manager.write_file(ino, data, &write_time) {
             Ok(_) => {}
             Err(e) => {
                 debug!("[RFuseFS][write] -> Write data. {}", e);
@@ -865,7 +865,7 @@ impl Filesystem for RFuseFS {
 
         let new_time = SystemTime::now();
         parent_inode.remove_child(ino);
-        match self.remote_file_manager.remove_file(ino, new_time) {
+        match self.remote_file_manager.remove_file(ino, &new_time) {
             Ok(_) => {}
             Err(e) => {
                 debug!("[RFuseFS][unlink] -> Remove a file. {}", e);

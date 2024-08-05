@@ -41,9 +41,14 @@ pub struct TmpFile {
     pub lock: RwLock<()>,
 }
 
-pub trait TmpFileTrait {
+pub trait TmpFileTrait: Send {
     // 写入文件
-    fn write(&self, tf: &TmpFile, data: &[u8], write_time: SystemTime) -> Result<(), TmpFileError> {
+    fn write(
+        &self,
+        tf: &TmpFile,
+        data: &[u8],
+        write_time: &SystemTime,
+    ) -> Result<(), TmpFileError> {
         warn!(
             "[TmpFileTrait][Not Implemented] node: {:#?}, write(data: {:#?}), write_time: {:#?}",
             tf, data, write_time
@@ -83,7 +88,7 @@ pub trait TmpFileTrait {
         &self,
         tf: &TmpFile,
         new_path: String,
-        rename_time: SystemTime,
+        rename_time: &SystemTime,
     ) -> Result<(), TmpFileError> {
         warn!(
             "[TmpFileTrait][Not Implemented] node: {:#?}, rename(new_path: {:#?}, rename_time: {:#?})",
@@ -102,7 +107,7 @@ pub trait TmpFileTrait {
     }
 
     // 删除文件
-    fn remove_file(&self, tf: &TmpFile, rm_file_time: SystemTime) -> Result<(), TmpFileError> {
+    fn remove_file(&self, tf: &TmpFile, rm_file_time: &SystemTime) -> Result<(), TmpFileError> {
         warn!(
             "[TmpFileTrait][Not Implemented] node: {:#?}, remove_file(rm_file_time: {:#?})",
             tf, rm_file_time
@@ -120,7 +125,7 @@ pub trait TmpFileTrait {
     }
 
     // 删除目录
-    fn remove_dir(&self, tf: &TmpFile, rm_dir_time: SystemTime) -> Result<(), TmpFileError> {
+    fn remove_dir(&self, tf: &TmpFile, rm_dir_time: &SystemTime) -> Result<(), TmpFileError> {
         warn!(
             "[TmpFileTrait][Not Implemented] node: {:#?}, remove_dir(rm_dir_time: {:#?})",
             tf, rm_dir_time
