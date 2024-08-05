@@ -1,4 +1,3 @@
-use ctrlc;
 use fuser::MountOption;
 use log::info;
 use rfuse_core::sys_fs::RFuseFS;
