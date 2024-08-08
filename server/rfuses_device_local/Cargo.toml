@@ -14,8 +14,11 @@ rfuse_core = { path = "../../crates/rfuse_core" }
 rfuse_device_disk = { path = "../../crates/rfuse_device_disk", features = ["local"]}
 walkdir.workspace = true
 nix.workspace = true
-flexi_logger.workspace = true
+fern.workspace = true
 ctrlc.workspace = true
+clap.workspace = true
+colored.workspace = true
+chrono.workspace = true
 
 [target.'cfg(debug_assertions)'.dependencies]
 env_logger.workspace = true

@@ -65,7 +65,7 @@ pub fn user_defined_init_fs(
             .replace(&source_dir, "")
             .replace(&entry.file_name().to_str().unwrap().to_string(), "");
         debug!(
-            "mount_path: {:?}",
+            "mount_file: {:?}",
             path.clone() + entry.file_name().to_str().unwrap()
         );
 
