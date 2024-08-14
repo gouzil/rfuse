@@ -4,7 +4,8 @@ pub mod cli;
 pub mod init_fs;
 pub mod local_fs;
 pub mod logging;
-pub mod utils;
+pub mod notify_loop;
+pub mod run;
 
 #[derive(Copy, Clone)]
 pub enum ExitStatus {

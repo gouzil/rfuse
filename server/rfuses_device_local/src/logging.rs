@@ -8,17 +8,19 @@ pub fn init_log(level: &LogLevel) {
         .format(|out, message, record| match record.level() {
             Level::Error => {
                 out.finish(format_args!(
-                    "{}{} {}",
-                    "error".red().bold(),
-                    ":".bold(),
+                    "[{}:{}][{}] {}",
+                    record.file().unwrap_or("unknown"),
+                    record.line().unwrap_or(0),
+                    "ERROR".red(),
                     message
                 ));
             }
             Level::Warn => {
                 out.finish(format_args!(
-                    "{}{} {}",
-                    "warning".yellow().bold(),
-                    ":".bold(),
+                    "[{}:{}][{}] {}",
+                    record.file().unwrap_or("unknown"),
+                    record.line().unwrap_or(0),
+                    "WARNING".yellow(),
                     message
                 ));
             }
