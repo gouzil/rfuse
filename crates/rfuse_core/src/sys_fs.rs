@@ -19,8 +19,13 @@ use crate::{
     utils::check_access,
 };
 
+pub enum RFuseFSOP {
+    ReInItFs,
+    Exit,
+    Nothing,
+}
+
 pub struct RFuseFS {
-    #[allow(dead_code)]
     fs_name: String, // 后期可能会有多个目录的需求，这个先保留
     source_dir: String,
     inodes: HashMap<u64, Inode>,
@@ -67,6 +72,19 @@ impl RFuseFS {
 
     pub fn write_inode(&mut self, inode: &Inode) {
         self.inodes.insert(inode.ino, inode.clone());
+    }
+
+    pub fn re_init_fs(&mut self) {
+        self.clean_inode();
+        match self
+            .remote_file_manager
+            .initialize_fs(&mut self.inodes, self.source_dir.clone())
+        {
+            Ok(_) => {}
+            Err(e) => {
+                debug!("[RFuseFS][init] -> Initialize filesystem. {}", e);
+            }
+        };
     }
 }
 
@@ -877,5 +895,9 @@ impl Filesystem for RFuseFS {
         parent_inode.attr.ctime = new_time;
         self.inodes.remove(&ino);
         reply.ok();
+    }
+
+    fn destroy(&mut self) {
+        info!("[RFuseFS][destroy] -> Destroy {} filesystem.", self.fs_name);
     }
 }

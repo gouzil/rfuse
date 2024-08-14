@@ -20,10 +20,8 @@ walkdir = "2.5.0"
 nix = { version = "0.29.0", features=["fs","user"]}
 fern = { version = "0.6.2", features = ["date-based"]}
 ctrlc = "3.4.4"
-clap ={ version = "4.5.13", features = ["derive"]}
+clap = { version = "4.5.13", features = ["derive"]}
 colored = { version = "2.1.0" }
 chrono = { version = "0.4.31", default-features = false, features = ["clock"] }
-
-[workspace.dev-dependencies]
-# Disable colored output in tests
-colored = { workspace = true, features = ["no-color"] }
+notify = "6.1.1"
+anyhow = "1.0.86"
