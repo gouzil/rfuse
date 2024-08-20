@@ -1,12 +1,33 @@
 use std::path::PathBuf;
 
 use clap::{command, Parser};
+use rfuse_device_disk::DiskType;
 
 use crate::logging::LogLevel;
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
+#[command(
+    author,
+    name = "rfuses",
+    about = "rfuse: A fuse server.",
+    after_help = "For help with a specific command, see: `rfuses help <command>`."
+)]
+#[command(version)]
+pub struct Args {
+    #[command(subcommand)]
+    pub command: Command,
+    #[clap(flatten)]
+    pub log_level_args: LogLevelArgs,
+}
+
+#[derive(Debug, clap::Subcommand)]
+pub enum Command {
+    Link(LinkCommand),
+}
+
+#[derive(Parser, Debug)]
 #[command(version, author, about, long_about = None)]
-pub struct Cli {
+pub struct LinkCommand {
     #[clap(help = "Origin file address [default: .]")]
     pub origin: PathBuf,
 
@@ -20,7 +41,40 @@ pub struct Cli {
     pub fs_name: String,
 
     #[clap(flatten)]
-    pub log_level_args: LogLevelArgs,
+    pub disk_type: DiskTypeArgs,
+}
+
+#[derive(Debug, clap::Args)]
+pub struct DiskTypeArgs {
+    #[arg(
+        short,
+        long,
+        default_value_t = true,
+        global = true,
+        group = "disk",
+        help_heading = "Disk types"
+    )]
+    pub local: bool,
+    #[arg(
+        short,
+        long,
+        global = true,
+        group = "disk",
+        help_heading = "Disk types"
+    )]
+    pub mem: bool,
+}
+
+impl From<&DiskTypeArgs> for DiskType {
+    fn from(args: &DiskTypeArgs) -> Self {
+        if args.local {
+            Self::Local
+        } else if args.mem {
+            Self::Mem
+        } else {
+            Self::Local
+        }
+    }
 }
 
 #[derive(Debug, clap::Args)]

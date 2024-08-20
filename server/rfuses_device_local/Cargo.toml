@@ -22,9 +22,6 @@ chrono.workspace = true
 notify.workspace = true
 anyhow.workspace = true
 
-[target.'cfg(debug_assertions)'.dependencies]
-env_logger.workspace = true
-
 [target.'cfg(target_os="linux")'.dependencies]
 procfs = "0.16.0"
 
