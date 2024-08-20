@@ -4,3 +4,8 @@ pub mod local_disk;
 pub mod mem_disk;
 
 pub mod utils;
+
+pub enum DiskType {
+    Local,
+    Mem,
+}

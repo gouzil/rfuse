@@ -3,7 +3,7 @@ use std::sync::mpsc;
 use crate::init_fs::user_defined_init_fs;
 use crate::notify_loop::notify_loop;
 use crate::{
-    cli::args::Cli,
+    cli::args::{Args, Command, LinkCommand},
     local_fs::LocalFS,
     logging::{init_log, LogLevel},
     ExitStatus,
@@ -12,20 +12,32 @@ use anyhow::Result;
 use fuser::MountOption;
 use log::{error, info};
 use rfuse_core::sys_fs::{RFuseFS, RFuseFSOP};
+use rfuse_device_disk::DiskType;
 
 pub fn run(
-    Cli {
-        origin,
-        mount,
-        read_only,
-        fs_name,
+    Args {
+        command,
         log_level_args,
-    }: Cli,
+    }: Args,
 ) -> Result<ExitStatus> {
     // 日志初始化
     let log_level = LogLevel::from(&log_level_args);
     init_log(&log_level);
 
+    match command {
+        Command::Link(link_command) => run_link(link_command),
+    }
+}
+
+fn run_link(
+    LinkCommand {
+        origin,
+        mount,
+        read_only,
+        fs_name,
+        disk_type,
+    }: LinkCommand,
+) -> Result<ExitStatus> {
     // 挂载选项
     let mut options = vec![
         MountOption::FSName(fs_name.clone()), // 文件系统名称
@@ -56,7 +68,10 @@ pub fn run(
 
     loop {
         // 创建本地文件系统
-        let lfs = LocalFS;
+        let lfs = match DiskType::from(&disk_type) {
+            DiskType::Local => LocalFS,
+            DiskType::Mem => unimplemented!(),
+        };
         let rfs = RFuseFS::new(
             fs_name.clone(),
             true,

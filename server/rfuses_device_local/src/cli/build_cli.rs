@@ -1,7 +1,7 @@
 use clap::Parser;
 
-use super::args::Cli;
+use super::args::Args;
 
-pub fn build_cli() -> Cli {
-    Cli::parse()
+pub fn build_cli() -> Args {
+    Args::parse()
 }

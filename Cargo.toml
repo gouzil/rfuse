@@ -15,7 +15,6 @@ license = "MIT"
 log = "0.4.22"
 fuser = { git = "https://github.com/cberner/fuser.git", branch="master" }
 libc = "0.2"
-env_logger = "0.11.3" # 仅限测试使用
 walkdir = "2.5.0"
 nix = { version = "0.29.0", features=["fs","user"]}
 fern = { version = "0.6.2", features = ["date-based"]}
