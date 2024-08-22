@@ -25,7 +25,9 @@ pub async fn notify_loop(
             // 创建一个文件监视器
             let mut watcher = match RecommendedWatcher::new(
                 move |res| {
-                    let _ = notify_send.blocking_send(res);
+                    if let Err(e) = notify_send.blocking_send(res) {
+                        error!("[notify loop] send error: {:?}", e);
+                    }
                 },
                 Config::default(),
             ) {
