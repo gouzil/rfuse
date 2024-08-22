@@ -41,7 +41,7 @@ fn run_link(
     // 挂载选项
     let mut options = vec![
         MountOption::FSName(fs_name.clone()), // 文件系统名称
-        MountOption::AutoUnmount,             // 这样可以自动卸载
+        // MountOption::AutoUnmount,             // 这样可以自动卸载, (但是会导致loop情况下重复卸载)
         MountOption::AllowOther,
     ];
 
@@ -88,7 +88,7 @@ fn run_link(
                     continue;
                 }
                 RFuseFSOP::Exit => {
-                    drop(guard);
+                    guard.join();
                     break;
                 }
                 RFuseFSOP::Nothing => {
