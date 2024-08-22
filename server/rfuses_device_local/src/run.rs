@@ -51,7 +51,7 @@ async fn run_link(
     }
 
     // 创建信号处理器
-    let (rfs_send, mut rfs_recv) = mpsc::channel(128);
+    let (rfs_send, mut rfs_recv) = mpsc::channel(3);
 
     let ctrlc_send = rfs_send.clone();
     // 这里是 ctrl+c 信号处理
