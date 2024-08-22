@@ -1,5 +1,3 @@
-use std::sync::mpsc;
-
 use crate::init_fs::user_defined_init_fs;
 use crate::notify_loop::notify_loop;
 use crate::{
@@ -10,11 +8,12 @@ use crate::{
 };
 use anyhow::Result;
 use fuser::MountOption;
-use log::{error, info};
+use log::{debug, error, info};
 use rfuse_core::sys_fs::{RFuseFS, RFuseFSOP};
 use rfuse_device_disk::DiskType;
+use tokio::{signal, sync::mpsc};
 
-pub fn run(
+pub async fn run(
     Args {
         command,
         log_level_args,
@@ -25,11 +24,11 @@ pub fn run(
     init_log(&log_level);
 
     match command {
-        Command::Link(link_command) => run_link(link_command),
+        Command::Link(link_command) => run_link(link_command).await,
     }
 }
 
-fn run_link(
+async fn run_link(
     LinkCommand {
         origin,
         mount,
@@ -52,16 +51,23 @@ fn run_link(
     }
 
     // 创建信号处理器
-    let (rfs_send, rfs_recv) = mpsc::channel();
+    let (rfs_send, mut rfs_recv) = mpsc::channel(3);
 
     let ctrlc_send = rfs_send.clone();
     // 这里是 ctrl+c 信号处理
-    ctrlc::set_handler(move || {
+    tokio::spawn(async move {
+        match signal::ctrl_c().await {
+            Ok(_) => debug!("ctrl+c received"),
+            Err(e) => error!("ctrl+c error: {:?}", e),
+        };
         info!("ctrl+c handler running");
-        ctrlc_send.send(RFuseFSOP::Exit).unwrap();
-    })?;
+        match ctrlc_send.send(RFuseFSOP::Exit).await {
+            Ok(_) => debug!("ctrl+c handler send success"),
+            Err(e) => error!("ctrl+c handler send error: {:?}", e),
+        }
+    });
 
-    if let Err(e) = notify_loop(rfs_send.clone(), origin.display().to_string()) {
+    if let Err(e) = notify_loop(rfs_send.clone(), origin.display().to_string()).await {
         error!("[run] notify_loop failed");
         return Ok(e);
     }
@@ -81,7 +87,7 @@ fn run_link(
         );
         let guard = fuser::spawn_mount2(rfs, mount.display().to_string(), &options).unwrap();
 
-        if let Ok(rfs_op) = rfs_recv.recv() {
+        if let Some(rfs_op) = rfs_recv.recv().await {
             match rfs_op {
                 RFuseFSOP::ReInItFs => {
                     drop(guard);
