@@ -15,12 +15,13 @@ rfuse_device_disk = { path = "../../crates/rfuse_device_disk", features = ["loca
 walkdir.workspace = true
 nix.workspace = true
 fern.workspace = true
-ctrlc.workspace = true
 clap.workspace = true
 colored.workspace = true
 chrono.workspace = true
 notify.workspace = true
 anyhow.workspace = true
+tokio.workspace = true
+# tokio-stream.workspace = true
 
 [target.'cfg(target_os="linux")'.dependencies]
 procfs = "0.16.0"
