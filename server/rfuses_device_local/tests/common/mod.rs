@@ -58,8 +58,7 @@ impl TestContext {
 
     /// Create a rfusers_device_local command for testing.
     pub fn command(&self) -> Command {
-        let command = Command::new(get_bin());
-        command
+        Command::new(get_bin())
     }
 }
 
