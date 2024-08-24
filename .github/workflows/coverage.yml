@@ -53,3 +53,4 @@ jobs:
                 debug: true
                 flag-name: coverage
                 parallel: true
+                parallel-finished: true
