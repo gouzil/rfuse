@@ -26,7 +26,7 @@ pub enum Command {
 }
 
 #[derive(Parser, Debug)]
-#[command(version, author, about, long_about = None)]
+#[command(version, author, about, long_about = None, about = "A fuse server, similar to link.")]
 pub struct LinkCommand {
     #[clap(help = "Origin file address [default: .]")]
     pub origin: PathBuf,
@@ -52,7 +52,8 @@ pub struct DiskTypeArgs {
         default_value_t = true,
         global = true,
         group = "disk",
-        help_heading = "Disk types"
+        help_heading = "Disk types",
+        help = "Use local disk"
     )]
     pub local: bool,
     #[arg(
@@ -60,7 +61,8 @@ pub struct DiskTypeArgs {
         long,
         global = true,
         group = "disk",
-        help_heading = "Disk types"
+        help_heading = "Disk types",
+        help = "Use memory as disk"
     )]
     pub mem: bool,
 }
