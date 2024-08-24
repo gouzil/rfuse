@@ -50,7 +50,3 @@ jobs:
             with:
                 github-token: ${{ secrets.GITHUB_TOKEN }}
                 files: lcov.info
-                debug: true
-                flag-name: coverage
-                parallel: true
-                parallel-finished: true
