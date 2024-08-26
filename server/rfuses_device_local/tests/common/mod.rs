@@ -52,6 +52,7 @@ impl TestContext {
         }
     }
 
+    #[allow(dead_code)]
     /// Create a `rfusers_device_local help` command with options shared across scenarios.
     pub fn help(&self) -> Command {
         let mut command = Command::new(get_bin());
@@ -59,11 +60,13 @@ impl TestContext {
         command
     }
 
+    #[allow(dead_code)]
     /// Create a rfusers_device_local command for testing.
     pub fn command(&self) -> Command {
         Command::new(get_bin())
     }
 
+    #[allow(dead_code)]
     /// Create a `rfusers_device_local link` command with options shared across scenarios.
     pub fn link(&self) -> Command {
         let mut command = Command::new(get_bin());
