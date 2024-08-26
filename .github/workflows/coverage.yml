@@ -39,18 +39,10 @@ jobs:
                 sudo apt-get update
                 sudo apt-get install fuse3 libfuse3-dev
 
-          # - name: test-run
-          #   run: |
-          #       mkdir sourcedata
-          #       mkdir testdata
-          #       touch sourcedata/testfile
-          #       cargo build
-          #       ./target/debug/rfuses_device_local link ./sourcedata ./testdata/ -v
-
           - name: Collect coverage data
             # Generate separate reports for nextest and doctests, and combine them.
             run: |
-                cargo llvm-cov --no-report nextest --all-targets
+                cargo llvm-cov --no-report nextest
                 # cargo llvm-cov --no-report --doc
                 cargo llvm-cov report --lcov --output-path lcov.info
 
