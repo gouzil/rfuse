@@ -175,7 +175,7 @@ macro_rules! rfuses_spawn_run {
                 run_command_with_status($cmd, Vec::<(String, String)>::new(), Some($rx)).await;
             assert!(status.success());
         });
-        tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(10)).await;
 
         // 运行测试代码
         $func();
