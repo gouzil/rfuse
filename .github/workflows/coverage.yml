@@ -33,6 +33,7 @@ jobs:
             uses: taiki-e/install-action@v2 # v2
             with:
               tool: cargo-llvm-cov
+
           - name: install package
             run: |
                 sudo apt-get update
@@ -49,7 +50,7 @@ jobs:
           - name: Collect coverage data
             # Generate separate reports for nextest and doctests, and combine them.
             run: |
-                cargo llvm-cov --no-report nextest --bound=all
+                cargo llvm-cov --no-report nextest --all-targets
                 # cargo llvm-cov --no-report --doc
                 cargo llvm-cov report --lcov --output-path lcov.info
 
