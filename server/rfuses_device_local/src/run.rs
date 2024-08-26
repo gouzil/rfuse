@@ -9,6 +9,7 @@ use crate::{
 use anyhow::Result;
 use fuser::MountOption;
 use log::{debug, error, info};
+use nix::unistd::geteuid;
 use rfuse_core::sys_fs::{RFuseFS, RFuseFSOP};
 use rfuse_device_disk::DiskType;
 use tokio::{signal, sync::mpsc};
@@ -40,9 +41,12 @@ async fn run_link(
     // 挂载选项
     let mut options = vec![
         MountOption::FSName(fs_name.clone()), // 文件系统名称
-        // MountOption::AutoUnmount,             // 这样可以自动卸载, (但是会导致loop情况下重复卸载)
-        MountOption::AllowOther,
+                                              // MountOption::AutoUnmount,             // 这样可以自动卸载, (但是会导致loop情况下重复卸载)
     ];
+
+    if geteuid().is_root() {
+        options.push(MountOption::AllowOther); // 这样可以让其他用户访问
+    }
 
     if read_only {
         options.push(MountOption::RO); // 这样是只读

@@ -1,13 +1,16 @@
 use assert_fs::{fixture::ChildPath, prelude::PathChild};
 use etcetera::BaseStrategy;
+use nix::sys::signal::{self, Signal};
+use nix::unistd::Pid;
 use regex::Regex;
 use std::{
     borrow::BorrowMut,
     path::PathBuf,
-    process::{Command, ExitStatus, Output},
+    process::{ExitStatus, Output, Stdio},
 };
+use tokio::{process::Command, sync::mpsc};
 
-// Macro and test context only, don't use directly.
+#[allow(dead_code)] // Macro and test context only, don't use directly.
 pub const INSTA_FILTERS: &[(&str, &str)] = &[
     // Operation times
     (r"(\s|\()(\d+m )?(\d+\.)?\d+(ms|s)", "$1[TIME]"),
@@ -49,16 +52,26 @@ impl TestContext {
         }
     }
 
+    #[allow(dead_code)]
     /// Create a `rfusers_device_local help` command with options shared across scenarios.
     pub fn help(&self) -> Command {
-        let mut command = self.command();
+        let mut command = Command::new(get_bin());
         command.arg("help");
         command
     }
 
+    #[allow(dead_code)]
     /// Create a rfusers_device_local command for testing.
     pub fn command(&self) -> Command {
         Command::new(get_bin())
+    }
+
+    #[allow(dead_code)]
+    /// Create a `rfusers_device_local link` command with options shared across scenarios.
+    pub fn link(&self) -> Command {
+        let mut command = Command::new(get_bin());
+        command.arg("link");
+        command
     }
 }
 
@@ -72,32 +85,48 @@ pub fn get_bin() -> PathBuf {
     PathBuf::from(my_app)
 }
 
+#[allow(dead_code)]
 /// Execute the command and format its output status, stdout and stderr into a snapshot string.
-///
-/// This function is derived from `insta_cmd`s `spawn_with_info`.
-pub fn run_command<T: AsRef<str>>(
+pub async fn run_command<T: AsRef<str>>(
     command: impl BorrowMut<Command>,
     filters: impl AsRef<[(T, T)]>,
+    rx: Option<mpsc::Receiver<()>>,
 ) -> (String, Output) {
-    let (snapshot, output, _) = run_command_with_status(command, filters);
+    let (snapshot, output, _) = run_command_with_status(command, filters, rx).await;
     (snapshot, output)
 }
 
-pub fn run_command_with_status<T: AsRef<str>>(
+pub async fn run_command_with_status<T: AsRef<str>>(
     mut command: impl BorrowMut<Command>,
     filters: impl AsRef<[(T, T)]>,
+    rx: Option<mpsc::Receiver<()>>,
 ) -> (String, Output, ExitStatus) {
     // TODO: add tracing-durations-export
     let program = command
         .borrow_mut()
+        .as_std()
         .get_program()
         .to_string_lossy()
         .to_string();
 
-    let output = command
+    let child = command
         .borrow_mut()
-        .output()
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .stdin(Stdio::piped())
+        .spawn()
         .unwrap_or_else(|err| panic!("Failed to spawn {program}: {err}"));
+
+    if let Some(mut rx) = rx {
+        rx.recv().await;
+        // 获取子进程的 PID
+        let pid = child.id().expect("Failed to get child PID");
+        // 向子进程发送 SIGINT (Ctrl+C)
+        signal::kill(Pid::from_raw(pid as i32), Signal::SIGINT).expect("Failed to send SIGINT");
+    }
+    let output = child.wait_with_output().await.unwrap_or_else(|err| {
+        panic!("Failed to wait for {program} to finish: {err}");
+    });
 
     let mut snapshot = format!(
         "success: {:?}\nexit_code: {}\n----- stdout -----\n{}\n----- stderr -----\n{}",
@@ -126,14 +155,39 @@ macro_rules! rfuses_snapshot {
     ($spawnable:expr, @$snapshot:literal) => {{
         rfuses_snapshot!($crate::common::INSTA_FILTERS.to_vec(), $spawnable, @$snapshot)
     }};
-    ($filters:expr,$spawnable:expr, @$snapshot:literal) => {{
-        // Take a reference for backwards compatibility with the vec-expecting insta filters.
-        let (snapshot, output) = $crate::common::run_command($spawnable, $filters);
+    ($filters:expr, $spawnable:expr, @$snapshot:literal) => {{
+        let (snapshot, output) = $crate::common::run_command($spawnable, $filters, None).await;
         ::insta::assert_snapshot!(snapshot, @$snapshot);
         output
+    }};
+    ($filters:expr,$spawnable:expr, $rx:expr, @$snapshot:literal) => {{
+        let (snapshot, output) = $crate::common::run_command($spawnable, $filters, rx).await;
+        ::insta::assert_snapshot!(snapshot, @$snapshot);
+        output
+    }};
+}
+
+#[allow(unused_macros)]
+macro_rules! rfuses_spawn_run {
+    ($cmd:expr, $func:expr, $tx:expr, $rx:expr) => {{
+        let handle = tokio::spawn(async move {
+            let (_, _, status) =
+                run_command_with_status($cmd, Vec::<(String, String)>::new(), Some($rx)).await;
+            assert!(status.success());
+        });
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+        // 运行测试代码
+        $func();
+
+        // 通知子进程发送 SIGINT 信号
+        $tx.send(()).await.unwrap();
+        handle.await.unwrap();
     }};
 }
 
 /// <https://stackoverflow.com/a/31749071/3549270>
 #[allow(unused_imports)]
 pub(crate) use rfuses_snapshot;
+#[allow(unused_imports)]
+pub(crate) use rfuses_spawn_run;

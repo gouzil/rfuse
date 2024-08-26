@@ -7,7 +7,7 @@ pub mod logging;
 pub mod notify_loop;
 pub mod run;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum ExitStatus {
     /// 成功
     Success,

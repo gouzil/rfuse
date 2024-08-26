@@ -33,6 +33,7 @@ jobs:
             uses: taiki-e/install-action@v2 # v2
             with:
               tool: cargo-llvm-cov
+
           - name: install package
             run: |
                 sudo apt-get update

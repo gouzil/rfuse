@@ -2,8 +2,8 @@ use common::{rfuses_snapshot, TestContext};
 
 mod common;
 
-#[test]
-fn help() {
+#[tokio::test]
+async fn help() {
     let context = TestContext::new();
 
     rfuses_snapshot!(context.help(), @r###"
@@ -32,8 +32,8 @@ For help with a specific command, see: `rfuses help <command>`.
 ----- stderr -----"###);
 }
 
-#[test]
-fn help_link() {
+#[tokio::test]
+async fn help_link() {
     let context = TestContext::new();
 
     rfuses_snapshot!(context.help().arg("link"), @r###"
