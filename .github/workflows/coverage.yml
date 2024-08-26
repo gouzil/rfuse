@@ -43,7 +43,8 @@ jobs:
                 mkdir sourcedata
                 mkdir testdata
                 touch sourcedata/testfile
-                sudo cargo run --bin rfuses_device_local link ./sourcedata ./testdata/ -v
+                cargo build
+                sudo ./target/debug/rfuses_device_local link ./sourcedata ./testdata/ -v
 
           # - name: Collect coverage data
           #   # Generate separate reports for nextest and doctests, and combine them.
