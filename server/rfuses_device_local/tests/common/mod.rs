@@ -169,19 +169,22 @@ macro_rules! rfuses_snapshot {
 
 #[allow(unused_macros)]
 macro_rules! rfuses_spawn_run {
-    ($cmd:expr, $func:expr, $tx:expr, $rx:expr) => {{
+    ($cmd:expr, $func:expr) => {{
+        let (tx, rx) = tokio::sync::mpsc::channel(1);
         let handle = tokio::spawn(async move {
             let (_, _, status) =
-                run_command_with_status($cmd, Vec::<(String, String)>::new(), Some($rx)).await;
+                run_command_with_status($cmd, Vec::<(String, String)>::new(), Some(rx)).await;
             assert!(status.success());
         });
-        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+        // 等待fuse完全启动
+        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
         // 运行测试代码
         $func();
 
         // 通知子进程发送 SIGINT 信号
-        $tx.send(()).await.unwrap();
+        tx.send(()).await.unwrap();
         handle.await.unwrap();
     }};
 }
