@@ -379,7 +379,7 @@ impl Filesystem for RFuseFS {
         // 做一些异常处理
         let inode = self.get_inode(ino).unwrap();
         // 不是文件夹类型
-        if inode.attr.kind != InodeKind::Directory {
+        if !inode.is_dir() {
             reply.error(libc::ENOTDIR);
             return;
         }
@@ -461,7 +461,7 @@ impl Filesystem for RFuseFS {
         }
 
         parent_inode.attr.mtime = SystemTime::now();
-        assert!(parent_inode.attr.kind == InodeKind::Directory);
+        assert!(parent_inode.is_dir());
         let path = parent_inode.attr.path.clone() + &parent_inode.attr.name + "/";
         let mut attr = InodeAttributes::new(name.clone(), InodeKind::Directory, path.clone());
 
@@ -612,9 +612,7 @@ impl Filesystem for RFuseFS {
         // Only overwrite an existing directory if it's empty
         if let Some(new_name_attrs) = self.lookup_name(newparent, newname.to_str().unwrap()) {
             let existing_inode = self.get_inode(new_name_attrs).unwrap();
-            if existing_inode.attr.kind == InodeKind::Directory
-                && !existing_inode.children_ino.is_empty()
-            {
+            if existing_inode.is_dir() && !existing_inode.children_ino.is_empty() {
                 reply.error(libc::ENOTEMPTY);
                 return;
             }
@@ -622,7 +620,7 @@ impl Filesystem for RFuseFS {
 
         // Only move an existing directory to a new parent, if we have write access to it,
         // because that will change the ".." link in it
-        if inode.attr.kind == InodeKind::Directory
+        if inode.is_dir()
             && parent != newparent
             && !check_access(
                 inode.attr.uid,
@@ -780,7 +778,7 @@ impl Filesystem for RFuseFS {
         }
 
         parent_inode.attr.mtime = SystemTime::now();
-        assert!(parent_inode.attr.kind == InodeKind::Directory);
+        assert!(parent_inode.is_dir());
         let path = parent_inode.attr.path.clone() + &parent_inode.attr.name + "/";
         // 这里的 attr 只是占位, 后续会被 RemoteFileManager 回写为真实数据
         let attr = InodeAttributes::new(name.clone(), InodeKind::File, path.clone());
