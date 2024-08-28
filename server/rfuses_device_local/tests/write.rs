@@ -1,5 +1,6 @@
 use std::{
     fs::{self, File},
+    io::{Read, Write},
     os::unix::fs::MetadataExt,
     path::Path,
 };
@@ -9,7 +10,7 @@ use common::{rfuses_spawn_run, run_command_with_status, TestContext};
 mod common;
 
 #[tokio::test]
-async fn test_create_file() {
+async fn test_write_file() {
     let context = TestContext::new();
 
     let mount_path = context.mount_dir.to_owned();
@@ -21,22 +22,25 @@ async fn test_create_file() {
         // 写入文件到挂载目录
         let mut test_file_mount = mount_path.clone();
         test_file_mount.push(test_file);
-        // 确认写入文件成功
-        assert!(File::create(&test_file_mount).is_ok());
+        // 写入文件内容
+        let content = "Hello, World!";
+        let mut file = File::create(&test_file_mount).unwrap();
+        file.write_all(content.as_bytes()).unwrap();
         // 检查文件是否存在于原始目录
         let mut test_file_origin = origin_path.clone();
         test_file_origin.push(test_file);
         assert!(Path::new(&test_file_origin).exists());
+        // 读取文件内容
+        let mut file = File::open(&test_file_origin).unwrap();
+        let mut read_content = String::new();
+        file.read_to_string(&mut read_content).unwrap();
+        // 检查文件内容是否相同
+        assert_eq!(content, read_content);
 
         // 测试meta信息写入是否成功
-        let test_file_mount_meta = fs::metadata(test_file_mount);
-        let test_file_origin_meta = fs::metadata(test_file_origin);
-        // 检查meta信息是否正常读取
-        assert!(test_file_mount_meta.is_ok());
-        assert!(test_file_origin_meta.is_ok());
-        // 检查meta信息是否相同
-        let test_file_mount_meta = test_file_mount_meta.unwrap();
-        let test_file_origin_meta = test_file_origin_meta.unwrap();
+        let test_file_mount_meta = fs::metadata(test_file_mount).unwrap();
+        let test_file_origin_meta = fs::metadata(test_file_origin).unwrap();
+
         // 检查文件大小是否相同
         assert_eq!(test_file_mount_meta.size(), test_file_origin_meta.size());
         // 检查文件权限是否相同

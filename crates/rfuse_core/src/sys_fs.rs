@@ -463,7 +463,7 @@ impl Filesystem for RFuseFS {
         parent_inode.attr.mtime = SystemTime::now();
         assert!(parent_inode.attr.kind == InodeKind::Directory);
         let path = parent_inode.attr.path.clone() + &parent_inode.attr.name + "/";
-        let mut attr = InodeAttributes::new(name.clone(), InodeKind::Directory, path);
+        let mut attr = InodeAttributes::new(name.clone(), InodeKind::Directory, path.clone());
 
         attr.permissions = mode as u16;
 
@@ -485,6 +485,7 @@ impl Filesystem for RFuseFS {
         new_inode.parent_ino = parent;
         new_inode.ino = new_file_meta.ino();
         new_inode.attr = new_file_meta.attr;
+        new_inode.attr.path = path;
 
         parent_inode.insert_child(new_inode.ino);
         self.inodes.insert(new_inode.ino, new_inode.clone());
@@ -780,9 +781,9 @@ impl Filesystem for RFuseFS {
 
         parent_inode.attr.mtime = SystemTime::now();
         assert!(parent_inode.attr.kind == InodeKind::Directory);
-        let path = parent_inode.attr.path.clone() + &parent_inode.attr.name;
+        let path = parent_inode.attr.path.clone() + &parent_inode.attr.name + "/";
         // 这里的 attr 只是占位, 后续会被 RemoteFileManager 回写为真实数据
-        let attr = InodeAttributes::new(name.clone(), InodeKind::File, path);
+        let attr = InodeAttributes::new(name.clone(), InodeKind::File, path.clone());
         let mut new_inode = Inode::new(parent, attr.clone());
         let new_ino = new_inode.ino;
         let new_file_meta = match self.remote_file_manager.new_file(
@@ -801,10 +802,10 @@ impl Filesystem for RFuseFS {
         new_inode.parent_ino = parent;
         new_inode.ino = new_file_meta.ino();
         new_inode.attr = new_file_meta.attr;
+        new_inode.attr.path = path; // 注意这里的 path 应该是自己管理的地址而不是, 信息源的地址
 
         parent_inode.insert_child(new_inode.ino);
         self.inodes.insert(new_inode.ino, new_inode.clone());
-        debug!("new_inode: {:#?}", new_inode);
         reply.created(
             &Duration::new(0, 0),
             &new_inode.file_attr(),
