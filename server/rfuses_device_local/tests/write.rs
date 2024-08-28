@@ -56,6 +56,8 @@ async fn test_create_file() {
             test_file_mount_meta.file_type(),
             test_file_origin_meta.file_type()
         );
+        // 检查inode号是否相同
+        assert_eq!(test_file_mount_meta.ino(), test_file_origin_meta.ino());
     };
     rfuses_spawn_run!(
         {
