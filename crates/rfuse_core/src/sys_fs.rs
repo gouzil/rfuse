@@ -379,7 +379,7 @@ impl Filesystem for RFuseFS {
         // 做一些异常处理
         let inode = self.get_inode(ino).unwrap();
         // 不是文件夹类型
-        if inode.attr.kind != InodeKind::Directory {
+        if !inode.is_dir() {
             reply.error(libc::ENOTDIR);
             return;
         }
@@ -461,9 +461,9 @@ impl Filesystem for RFuseFS {
         }
 
         parent_inode.attr.mtime = SystemTime::now();
-        assert!(parent_inode.attr.kind == InodeKind::Directory);
+        assert!(parent_inode.is_dir());
         let path = parent_inode.attr.path.clone() + &parent_inode.attr.name + "/";
-        let mut attr = InodeAttributes::new(name.clone(), InodeKind::Directory, path);
+        let mut attr = InodeAttributes::new(name.clone(), InodeKind::Directory, path.clone());
 
         attr.permissions = mode as u16;
 
@@ -485,6 +485,7 @@ impl Filesystem for RFuseFS {
         new_inode.parent_ino = parent;
         new_inode.ino = new_file_meta.ino();
         new_inode.attr = new_file_meta.attr;
+        new_inode.attr.path = path;
 
         parent_inode.insert_child(new_inode.ino);
         self.inodes.insert(new_inode.ino, new_inode.clone());
@@ -611,9 +612,7 @@ impl Filesystem for RFuseFS {
         // Only overwrite an existing directory if it's empty
         if let Some(new_name_attrs) = self.lookup_name(newparent, newname.to_str().unwrap()) {
             let existing_inode = self.get_inode(new_name_attrs).unwrap();
-            if existing_inode.attr.kind == InodeKind::Directory
-                && !existing_inode.children_ino.is_empty()
-            {
+            if existing_inode.is_dir() && !existing_inode.children_ino.is_empty() {
                 reply.error(libc::ENOTEMPTY);
                 return;
             }
@@ -621,7 +620,7 @@ impl Filesystem for RFuseFS {
 
         // Only move an existing directory to a new parent, if we have write access to it,
         // because that will change the ".." link in it
-        if inode.attr.kind == InodeKind::Directory
+        if inode.is_dir()
             && parent != newparent
             && !check_access(
                 inode.attr.uid,
@@ -779,10 +778,10 @@ impl Filesystem for RFuseFS {
         }
 
         parent_inode.attr.mtime = SystemTime::now();
-        assert!(parent_inode.attr.kind == InodeKind::Directory);
-        let path = parent_inode.attr.path.clone() + &parent_inode.attr.name;
+        assert!(parent_inode.is_dir());
+        let path = parent_inode.attr.path.clone() + &parent_inode.attr.name + "/";
         // 这里的 attr 只是占位, 后续会被 RemoteFileManager 回写为真实数据
-        let attr = InodeAttributes::new(name.clone(), InodeKind::File, path);
+        let attr = InodeAttributes::new(name.clone(), InodeKind::File, path.clone());
         let mut new_inode = Inode::new(parent, attr.clone());
         let new_ino = new_inode.ino;
         let new_file_meta = match self.remote_file_manager.new_file(
@@ -801,10 +800,10 @@ impl Filesystem for RFuseFS {
         new_inode.parent_ino = parent;
         new_inode.ino = new_file_meta.ino();
         new_inode.attr = new_file_meta.attr;
+        new_inode.attr.path = path; // 注意这里的 path 应该是自己管理的地址而不是, 信息源的地址
 
         parent_inode.insert_child(new_inode.ino);
         self.inodes.insert(new_inode.ino, new_inode.clone());
-        debug!("new_inode: {:#?}", new_inode);
         reply.created(
             &Duration::new(0, 0),
             &new_inode.file_attr(),
