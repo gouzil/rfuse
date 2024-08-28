@@ -156,12 +156,6 @@ async fn test_create_file_in_dir() {
         let mut test_file_mount = test_dir_mount.clone();
         test_file_mount.push(test_file);
         // 确认文件创建成功
-        match File::create(&test_file_mount) {
-            Ok(_) => {}
-            Err(e) => {
-                panic!("Failed to create file: {}", e);
-            }
-        }
         assert!(File::create(&test_file_mount).is_ok());
         // 检查文件是否存在于原始目录
         let mut test_file_origin = test_dir_origin.clone();
