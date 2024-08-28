@@ -42,7 +42,7 @@ jobs:
           - name: Collect coverage data
             # Generate separate reports for nextest and doctests, and combine them.
             run: |
-                cargo llvm-cov --no-report nextest
+                cargo llvm-cov --no-report nextest --release
                 # cargo llvm-cov --no-report --doc
                 cargo llvm-cov report --lcov --output-path lcov.info
 
