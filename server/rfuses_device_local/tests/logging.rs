@@ -8,7 +8,7 @@ mod common;
 async fn test_logging_verbose() {
     let context = TestContext::new();
     let closure = || {
-        if cfg!(debug_assertions) {
+        if !cfg!(debug_assertions) {
             let base_path = ProjectDirs::from("", "", "rfuse").unwrap();
             let mut log_dir_path = base_path.runtime_dir().unwrap().to_owned();
             log_dir_path.push("logs/");
