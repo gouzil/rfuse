@@ -1,7 +1,7 @@
 use colored::Colorize;
+use directories::ProjectDirs;
 use fern;
 use log::Level;
-use std::path::Path;
 
 pub fn init_log(level: &LogLevel) {
     let mut logger = fern::Dispatch::new()
@@ -50,9 +50,13 @@ pub fn init_log(level: &LogLevel) {
         logger = logger.chain(std::io::stdout());
     } else {
         // 查看文件夹是否存在
-        let log_dir_path = Path::new("./logs/");
+        let base_path = ProjectDirs::from("", "", "rfuse").unwrap();
+        let mut log_dir_path = base_path.runtime_dir().unwrap().to_owned();
+        log_dir_path.push("logs/");
+
+        // 创建文件夹
         if !log_dir_path.is_dir() {
-            std::fs::create_dir(log_dir_path).unwrap();
+            std::fs::create_dir_all(&log_dir_path).unwrap();
         }
         let log_dir = fern::DateBased::new(log_dir_path, "%Y-%m-%d-rfuses.log");
         logger = logger.chain(log_dir);
