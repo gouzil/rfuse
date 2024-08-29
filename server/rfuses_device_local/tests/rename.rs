@@ -169,7 +169,7 @@ async fn test_rename_dir() {
     let origin_path = context.origin_dir.to_owned();
 
     // 测试文件夹重命名是否成功
-    let test_dir = "test_rename_dir";
+    let test_dir = "test_rename_dir/";
     // 创建文件夹到原始目录
     let mut test_dir_origin = origin_path.clone();
     test_dir_origin.push(test_dir);
@@ -179,7 +179,7 @@ async fn test_rename_dir() {
 
     let closure = || {
         // 重命名文件夹
-        let test_dir_rename = "test_rename_dir_rename";
+        let test_dir_rename = "test_rename_dir_rename/";
         // 新文件夹地址
         let mut test_dir_rename_mount = mount_path.clone();
         test_dir_rename_mount.push(test_dir_rename);
