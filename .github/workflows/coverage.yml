@@ -39,6 +39,16 @@ jobs:
                 sudo apt-get update
                 sudo apt-get install fuse3 libfuse3-dev
 
+          - name: test
+            run: |
+              mkdir  ./sourcedata
+              mkdir  ./testdata
+              echo "Hello, world!" > ./sourcedata/hello.txt
+              cargo build
+              ./target/debug/rfuses_device_local link ./sourcedata ./testdata/ -v
+
+
+
           - name: Collect coverage data
             # Generate separate reports for nextest and doctests, and combine them.
             run: |
