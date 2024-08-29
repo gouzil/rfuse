@@ -213,12 +213,7 @@ impl RemoteFileManager {
         Ok(())
     }
 
-    pub fn mk_dir(
-        &mut self,
-        ino: u64,
-        attr: &InodeAttributes,
-        path: String,
-    ) -> Result<Inode, &str> {
+    pub fn mk_dir(&mut self, attr: &InodeAttributes, path: String) -> Result<Inode, &str> {
         let inode = TmpFile {
             file_name: attr.name.clone(),
             path,
@@ -234,7 +229,7 @@ impl RemoteFileManager {
                 return Err("make dir failed");
             }
         };
-        self.tmp_file_map.insert(ino, inode);
+        self.tmp_file_map.insert(dir.ino(), inode);
         Ok(dir)
     }
 
