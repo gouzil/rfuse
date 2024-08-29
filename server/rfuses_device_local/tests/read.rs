@@ -44,6 +44,8 @@ async fn test_read_file() {
 
         assert_ne!(test_file_origin, test_file_mount);
 
+        // 检查inode号是否相同
+        assert_eq!(test_file_origin_meta.ino(), test_file_mount_meta.ino());
         // 检查文件大小是否相同
         assert_eq!(test_file_origin_meta.size(), test_file_mount_meta.size());
         // 检查文件权限是否相同
@@ -63,8 +65,6 @@ async fn test_read_file() {
             test_file_origin_meta.file_type(),
             test_file_mount_meta.file_type()
         );
-        // 检查inode号是否相同
-        assert_eq!(test_file_origin_meta.ino(), test_file_mount_meta.ino());
     };
     rfuses_spawn_run!(
         {
@@ -104,6 +104,8 @@ async fn test_read_sub_dir() {
 
         assert_ne!(test_dir_origin, test_dir_mount);
 
+        // 检查inode号是否相同
+        assert_eq!(test_dir_origin_meta.ino(), test_dir_mount_meta.ino());
         // 检查文件权限是否相同
         assert_eq!(test_dir_origin_meta.mode(), test_dir_mount_meta.mode());
         // 检查文件所有者是否相同
@@ -121,8 +123,6 @@ async fn test_read_sub_dir() {
             test_dir_origin_meta.file_type(),
             test_dir_mount_meta.file_type()
         );
-        // 检查inode号是否相同
-        assert_eq!(test_dir_origin_meta.ino(), test_dir_mount_meta.ino());
     };
 
     rfuses_spawn_run!(
@@ -179,6 +179,8 @@ async fn test_read_file_in_sub_dir() {
 
         assert_ne!(test_file_origin, test_file_mount);
 
+        // 检查inode号是否相同
+        assert_eq!(test_file_origin_meta.ino(), test_file_mount_meta.ino());
         // 检查文件大小是否相同
         assert_eq!(test_file_origin_meta.size(), test_file_mount_meta.size());
         // 检查文件权限是否相同
@@ -198,8 +200,6 @@ async fn test_read_file_in_sub_dir() {
             test_file_origin_meta.file_type(),
             test_file_mount_meta.file_type()
         );
-        // 检查inode号是否相同
-        assert_eq!(test_file_origin_meta.ino(), test_file_mount_meta.ino());
     };
 
     rfuses_spawn_run!(

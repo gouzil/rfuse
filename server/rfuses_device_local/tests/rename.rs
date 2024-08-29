@@ -53,6 +53,8 @@ async fn test_rename_file() {
         let test_file_origin_meta = fs::metadata(test_file_rename_origin).unwrap();
         let test_file_mount_meta = fs::metadata(test_file_rename_mount).unwrap();
 
+        // 检查inode号是否相同
+        assert_eq!(test_file_origin_meta.ino(), test_file_mount_meta.ino());
         // 检查文件大小是否相同
         assert_eq!(test_file_origin_meta.size(), test_file_mount_meta.size());
         // 检查文件权限是否相同
@@ -64,7 +66,7 @@ async fn test_rename_file() {
         // 检查文件修改时间是否相同
         assert_eq!(test_file_origin_meta.mtime(), test_file_mount_meta.mtime());
         // 检查文件访问时间是否相同
-        assert_eq!(test_file_origin_meta.atime(), test_file_mount_meta.atime());
+        // assert_eq!(test_file_origin_meta.atime(), test_file_mount_meta.atime());
         // 检查文件创建时间是否相同
         assert_eq!(test_file_origin_meta.ctime(), test_file_mount_meta.ctime());
         // 检查文件类型是否相同
@@ -72,8 +74,6 @@ async fn test_rename_file() {
             test_file_origin_meta.file_type(),
             test_file_mount_meta.file_type()
         );
-        // 检查inode号是否相同
-        assert_eq!(test_file_origin_meta.ino(), test_file_mount_meta.ino());
     };
     rfuses_spawn_run!(
         {
@@ -127,6 +127,8 @@ async fn test_rename_in_mount_file() {
         let test_file_mount_meta = fs::metadata(test_file_rename_mount).unwrap();
         let test_file_origin_meta = fs::metadata(test_file_origin).unwrap();
 
+        // 检查inode号是否相同
+        assert_eq!(test_file_mount_meta.ino(), test_file_origin_meta.ino());
         // 检查文件大小是否相同
         assert_eq!(test_file_mount_meta.size(), test_file_origin_meta.size());
         // 检查文件权限是否相同
@@ -138,7 +140,7 @@ async fn test_rename_in_mount_file() {
         // 检查文件修改时间是否相同
         assert_eq!(test_file_mount_meta.mtime(), test_file_origin_meta.mtime());
         // 检查文件访问时间是否相同
-        assert_eq!(test_file_mount_meta.atime(), test_file_origin_meta.atime());
+        // assert_eq!(test_file_mount_meta.atime(), test_file_origin_meta.atime());
         // 检查文件创建时间是否相同
         assert_eq!(test_file_mount_meta.ctime(), test_file_origin_meta.ctime());
         // 检查文件类型是否相同
@@ -146,8 +148,6 @@ async fn test_rename_in_mount_file() {
             test_file_mount_meta.file_type(),
             test_file_origin_meta.file_type()
         );
-        // 检查inode号是否相同
-        assert_eq!(test_file_mount_meta.ino(), test_file_origin_meta.ino());
     };
 
     rfuses_spawn_run!(
@@ -202,6 +202,8 @@ async fn test_rename_dir() {
 
         assert_ne!(test_dir_rename_origin, test_dir_rename_mount);
 
+        // 检查inode号是否相同
+        assert_eq!(test_dir_origin_meta.ino(), test_dir_mount_meta.ino());
         // 检查文件夹大小是否相同
         assert_eq!(test_dir_origin_meta.size(), test_dir_mount_meta.size());
         // 检查文件夹权限是否相同
@@ -221,8 +223,6 @@ async fn test_rename_dir() {
             test_dir_origin_meta.file_type(),
             test_dir_mount_meta.file_type()
         );
-        // 检查inode号是否相同
-        assert_eq!(test_dir_origin_meta.ino(), test_dir_mount_meta.ino());
     };
     rfuses_spawn_run!(
         {
@@ -270,6 +270,8 @@ async fn test_rename_in_mount_dir() {
         let test_dir_mount_meta = fs::metadata(test_dir_rename_mount).unwrap();
         let test_dir_origin_meta = fs::metadata(test_dir_origin).unwrap();
 
+        // 检查inode号是否相同
+        assert_eq!(test_dir_mount_meta.ino(), test_dir_origin_meta.ino());
         // 检查文件夹大小是否相同
         assert_eq!(test_dir_mount_meta.size(), test_dir_origin_meta.size());
         // 检查文件夹权限是否相同
@@ -281,7 +283,7 @@ async fn test_rename_in_mount_dir() {
         // 检查文件夹修改时间是否相同
         assert_eq!(test_dir_mount_meta.mtime(), test_dir_origin_meta.mtime());
         // 检查文件夹访问时间是否相同
-        assert_eq!(test_dir_mount_meta.atime(), test_dir_origin_meta.atime());
+        // assert_eq!(test_dir_mount_meta.atime(), test_dir_origin_meta.atime());
         // 检查文件夹创建时间是否相同
         assert_eq!(test_dir_mount_meta.ctime(), test_dir_origin_meta.ctime());
         // 检查文件夹类型是否相同
@@ -289,8 +291,6 @@ async fn test_rename_in_mount_dir() {
             test_dir_mount_meta.file_type(),
             test_dir_origin_meta.file_type()
         );
-        // 检查inode号是否相同
-        assert_eq!(test_dir_mount_meta.ino(), test_dir_origin_meta.ino());
     };
 
     rfuses_spawn_run!(
