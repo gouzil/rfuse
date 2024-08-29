@@ -108,8 +108,6 @@ pub fn user_defined_init_fs(
             },
         };
         let k = entry.ino();
-        debug!("insert ino: {:?}", k);
-        debug!("insert value: {:?}", v);
         inodes.insert(k, v.clone());
         file_manager.add_file(k, v.attr.name, source_dir.clone() + &v.attr.path);
     }
