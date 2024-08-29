@@ -39,8 +39,10 @@ async fn test_read_file() {
         assert_eq!(content, read_content);
 
         // 测试meta信息读取是否成功
-        let test_file_origin_meta = fs::metadata(test_file_origin).unwrap();
-        let test_file_mount_meta = fs::metadata(test_file_mount).unwrap();
+        let test_file_origin_meta = fs::metadata(&test_file_origin).unwrap();
+        let test_file_mount_meta = fs::metadata(&test_file_mount).unwrap();
+
+        assert_ne!(test_file_origin, test_file_mount);
 
         // 检查文件大小是否相同
         assert_eq!(test_file_origin_meta.size(), test_file_mount_meta.size());
@@ -97,8 +99,10 @@ async fn test_read_sub_dir() {
         assert!(Path::new(&test_dir_mount).exists());
 
         // 测试meta信息读取是否成功
-        let test_dir_origin_meta = fs::metadata(test_dir_origin).unwrap();
-        let test_dir_mount_meta = fs::metadata(test_dir_mount).unwrap();
+        let test_dir_origin_meta = fs::metadata(&test_dir_origin).unwrap();
+        let test_dir_mount_meta = fs::metadata(&test_dir_mount).unwrap();
+
+        assert_ne!(test_dir_origin, test_dir_mount);
 
         // 检查文件权限是否相同
         assert_eq!(test_dir_origin_meta.mode(), test_dir_mount_meta.mode());
@@ -170,8 +174,10 @@ async fn test_read_file_in_sub_dir() {
         assert_eq!(content, read_content);
 
         // 测试meta信息读取是否成功
-        let test_file_origin_meta = fs::metadata(test_file_origin).unwrap();
-        let test_file_mount_meta = fs::metadata(test_file_mount).unwrap();
+        let test_file_origin_meta = fs::metadata(&test_file_origin).unwrap();
+        let test_file_mount_meta = fs::metadata(&test_file_mount).unwrap();
+
+        assert_ne!(test_file_origin, test_file_mount);
 
         // 检查文件大小是否相同
         assert_eq!(test_file_origin_meta.size(), test_file_mount_meta.size());

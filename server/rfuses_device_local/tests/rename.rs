@@ -197,8 +197,10 @@ async fn test_rename_dir() {
         assert!(Path::new(&test_dir_rename_origin).exists());
 
         // 测试meta信息读取是否成功
-        let test_dir_origin_meta = fs::metadata(test_dir_rename_origin).unwrap();
-        let test_dir_mount_meta = fs::metadata(test_dir_rename_mount).unwrap();
+        let test_dir_origin_meta = fs::metadata(&test_dir_rename_origin).unwrap();
+        let test_dir_mount_meta = fs::metadata(&test_dir_rename_mount).unwrap();
+
+        assert_ne!(test_dir_rename_origin, test_dir_rename_mount);
 
         // 检查文件夹大小是否相同
         assert_eq!(test_dir_origin_meta.size(), test_dir_mount_meta.size());
