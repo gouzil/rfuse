@@ -212,3 +212,44 @@ async fn test_read_file_in_sub_dir() {
         closure
     );
 }
+
+#[tokio::test]
+async fn test_read_dir() {
+    let context = TestContext::new();
+
+    let mount_path = context.mount_dir.to_owned();
+    let origin_path = context.origin_dir.to_owned();
+
+    let mut test_file_origin = origin_path.clone();
+    // 写入子目录到原始目录
+    let test_file = "test_read_dir";
+    test_file_origin.push(test_file);
+    assert!(fs::create_dir(&test_file_origin).is_ok());
+    assert!(Path::new(&test_file_origin).exists());
+    assert!(fs::metadata(&test_file_origin).unwrap().is_dir());
+
+    let closure = || {
+        // 读取挂载文件内容
+        let test_dir_mount = mount_path.clone();
+        let entries = fs::read_dir(&test_dir_mount).unwrap();
+        // 检查文件夹下是否有文件
+        assert_eq!(entries.count(), 1);
+        // 检查文件夹下文件是否为子文件夹
+        fs::read_dir(&test_dir_mount).unwrap().for_each(|entry| {
+            let entry = entry.unwrap();
+            let entry_meta = entry.metadata().unwrap();
+            assert!(entry_meta.is_dir());
+            assert_eq!(entry.file_name(), test_file);
+        });
+    };
+
+    rfuses_spawn_run!(
+        {
+            context
+                .link()
+                .arg(context.origin_dir.path())
+                .arg(context.mount_dir.path())
+        },
+        closure
+    );
+}
