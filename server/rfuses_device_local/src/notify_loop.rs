@@ -20,7 +20,7 @@ pub async fn notify_loop(
     tokio::spawn(async move {
         loop {
             // 创建一个通道，用于接收文件改动事件
-            let (notify_send, mut notify_recv) = mpsc::channel(1);
+            let (notify_send, mut notify_recv) = mpsc::channel(10);
 
             // 创建一个文件监视器
             let mut watcher = match RecommendedWatcher::new(

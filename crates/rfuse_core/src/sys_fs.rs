@@ -462,18 +462,24 @@ impl Filesystem for RFuseFS {
 
         parent_inode.attr.mtime = SystemTime::now();
         assert!(parent_inode.is_dir());
-        let path = parent_inode.attr.path.clone() + &parent_inode.attr.name + "/";
-        let mut attr = InodeAttributes::new(name.clone(), InodeKind::Directory, path.clone());
+
+        let new_path: String = {
+            if parent_inode.attr.name.is_empty() {
+                parent_inode.attr.path.clone()
+            } else {
+                parent_inode.attr.path.clone() + &parent_inode.attr.name + "/"
+            }
+        };
+
+        let mut attr = InodeAttributes::new(name.clone(), InodeKind::Directory, new_path.clone());
 
         attr.permissions = mode as u16;
 
         let mut new_inode = Inode::new(parent, attr.clone());
-        let new_ino = new_inode.ino;
-        let new_file_meta = match self.remote_file_manager.mk_dir(
-            new_ino,
-            &attr,
-            self.source_dir.clone() + &attr.path,
-        ) {
+        let new_file_meta = match self
+            .remote_file_manager
+            .mk_dir(&attr, self.source_dir.clone() + &attr.path)
+        {
             Ok(meta) => meta,
             Err(e) => {
                 debug!("[RFuseFS][mkdir] -> Create a directory. {}", e);
@@ -485,7 +491,12 @@ impl Filesystem for RFuseFS {
         new_inode.parent_ino = parent;
         new_inode.ino = new_file_meta.ino();
         new_inode.attr = new_file_meta.attr;
-        new_inode.attr.path = path;
+        new_inode.attr.path = new_path;
+
+        debug!(
+            "[RFuseFS][mkdir] -> Create a directory. {}",
+            new_inode.attr.path.clone() + &new_inode.attr.name
+        );
 
         parent_inode.insert_child(new_inode.ino);
         self.inodes.insert(new_inode.ino, new_inode.clone());
@@ -568,6 +579,11 @@ impl Filesystem for RFuseFS {
         };
 
         debug!(
+            "[RFuseFS][rename] -> Rename a file. name: {} ",
+            inode.attr.name,
+        );
+
+        debug!(
             "[RFuseFS][rename] -> Rename a file. {} -> {}",
             inode.attr.path.clone() + &inode.attr.name,
             new_parent_inode.attr.path.clone() + &new_parent_inode.attr.name + &new_name
@@ -637,7 +653,13 @@ impl Filesystem for RFuseFS {
 
         // 真正修改文件
         let new_time = SystemTime::now();
-        let new_path = new_parent_inode.attr.path.clone() + &new_parent_inode.attr.name + "/";
+        let new_path = {
+            if new_parent_inode.attr.name.is_empty() {
+                new_parent_inode.attr.path.clone()
+            } else {
+                new_parent_inode.attr.path.clone() + &new_parent_inode.attr.name + "/"
+            }
+        };
         match self.remote_file_manager.rename(
             inode.ino,
             new_name.clone(),
@@ -656,18 +678,18 @@ impl Filesystem for RFuseFS {
         inode.attr.name = new_name;
         inode.attr.path = new_path;
         // 修改时间
-        inode.attr.mtime = new_time;
+        // inode.attr.mtime = new_time;
         inode.attr.ctime = new_time;
         // 回写到缓存
         self.write_inode(&inode);
         // 删除旧文件夹的内容
         parent_inode.remove_child(inode.ino);
-        parent_inode.attr.mtime = new_time;
+        // parent_inode.attr.mtime = new_time;
         parent_inode.attr.ctime = new_time;
         self.write_inode(&parent_inode);
         // 更新新文件夹的内容
         new_parent_inode.children_ino.push(inode.ino);
-        new_parent_inode.attr.mtime = new_time;
+        // new_parent_inode.attr.mtime = new_time;
         new_parent_inode.attr.ctime = new_time;
         self.write_inode(&new_parent_inode);
 
@@ -779,7 +801,13 @@ impl Filesystem for RFuseFS {
 
         parent_inode.attr.mtime = SystemTime::now();
         assert!(parent_inode.is_dir());
-        let path = parent_inode.attr.path.clone() + &parent_inode.attr.name + "/";
+        let path = {
+            if parent_inode.attr.name.is_empty() {
+                parent_inode.attr.path.clone()
+            } else {
+                parent_inode.attr.path.clone() + &parent_inode.attr.name + "/"
+            }
+        };
         // 这里的 attr 只是占位, 后续会被 RemoteFileManager 回写为真实数据
         let attr = InodeAttributes::new(name.clone(), InodeKind::File, path.clone());
         let mut new_inode = Inode::new(parent, attr.clone());
