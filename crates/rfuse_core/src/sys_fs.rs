@@ -678,19 +678,19 @@ impl Filesystem for RFuseFS {
         inode.attr.name = new_name;
         inode.attr.path = new_path;
         // 修改时间
-        inode.attr.mtime = new_time;
-        // inode.attr.ctime = new_time;
+        // inode.attr.mtime = new_time;
+        inode.attr.ctime = new_time;
         // 回写到缓存
         self.write_inode(&inode);
         // 删除旧文件夹的内容
         parent_inode.remove_child(inode.ino);
-        parent_inode.attr.mtime = new_time;
-        // parent_inode.attr.ctime = new_time;
+        // parent_inode.attr.mtime = new_time;
+        parent_inode.attr.ctime = new_time;
         self.write_inode(&parent_inode);
         // 更新新文件夹的内容
         new_parent_inode.children_ino.push(inode.ino);
-        new_parent_inode.attr.mtime = new_time;
-        // new_parent_inode.attr.ctime = new_time;
+        // new_parent_inode.attr.mtime = new_time;
+        new_parent_inode.attr.ctime = new_time;
         self.write_inode(&new_parent_inode);
 
         reply.ok();
