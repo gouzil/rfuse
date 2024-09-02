@@ -116,15 +116,6 @@ pub fn read_exact(tf: &TmpFile, buf: &mut [u8], offset: u64) -> Result<(), TmpFi
 pub fn set_attr(tf: &TmpFile, attr: &InodeAttributes) -> Result<(), TmpFileError> {
     let full_path = tf.path.clone() + &tf.file_name;
 
-    let access_time = system_time_to_timespec(&attr.atime);
-    let modification_time = system_time_to_timespec(&attr.mtime);
-
-    // 将时间戳应用到文件
-    match change_time(full_path.as_str(), &access_time, &modification_time) {
-        Ok(_) => {}
-        Err(e) => return Err(e),
-    };
-
     #[cfg(target_os = "linux")]
     let permissions = attr.permissions as u32;
 
@@ -166,12 +157,20 @@ pub fn set_attr(tf: &TmpFile, attr: &InodeAttributes) -> Result<(), TmpFileError
     match truncate(full_path.as_str(), attr.size as i64) {
         Ok(_) => {
             debug!("Successfully set file size.");
-            Ok(())
         }
         Err(e) => {
             error!("[LocalDisk][set_attr]Failed to set file size: {}", e);
-            Err(TmpFileError::SetAttrError)
+            return Err(TmpFileError::SetAttrError);
         }
+    };
+
+    let access_time = system_time_to_timespec(&attr.atime);
+    let modification_time = system_time_to_timespec(&attr.mtime);
+
+    // 将时间戳应用到文件
+    match change_time(full_path.as_str(), &access_time, &modification_time) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e),
     }
 }
 

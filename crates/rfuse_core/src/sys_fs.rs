@@ -166,9 +166,9 @@ impl Filesystem for RFuseFS {
         uid: Option<u32>,
         gid: Option<u32>,
         size: Option<u64>,
-        _atime: Option<TimeOrNow>,
+        atime: Option<TimeOrNow>,
         mtime: Option<TimeOrNow>,
-        ctime: Option<SystemTime>,
+        _ctime: Option<SystemTime>,
         _fh: Option<u64>,
         _crtime: Option<SystemTime>,
         _chgtime: Option<SystemTime>,
@@ -209,16 +209,23 @@ impl Filesystem for RFuseFS {
             };
         }
 
+        if let Some(atime) = atime {
+            inode.attr.atime = match atime {
+                TimeOrNow::SpecificTime(time) => time,
+                fuser::TimeOrNow::Now => SystemTime::now(),
+            };
+        }
+
+        // if let Some(ctime) = ctime {
+        //     inode.attr.ctime = ctime;
+        // }
+
         if let Some(uid) = uid {
             inode.attr.uid = uid;
         }
 
         if let Some(gid) = gid {
             inode.attr.gid = gid;
-        }
-
-        if let Some(ctime) = ctime {
-            inode.attr.ctime = ctime;
         }
 
         // debug!(
