@@ -1,4 +1,5 @@
 use std::{
+    cmp::min,
     collections::HashMap,
     ffi::OsStr,
     time::{Duration, SystemTime},
@@ -303,6 +304,10 @@ impl Filesystem for RFuseFS {
         reply: ReplyData,
     ) {
         info!("[RFuseFS][read] -> Read data from an open file.");
+        debug!(
+            "[RFuseFS][read] {:?} offset={:?} size={:?}",
+            ino, offset, size
+        );
         assert!(offset >= 0);
         // if fh != ino {
         //     reply.error(EACCES);
@@ -319,12 +324,9 @@ impl Filesystem for RFuseFS {
             }
         };
 
-        let read_size = std::cmp::min(size, file_size.saturating_sub(offset as u64) as u32);
+        let read_size = min(size, file_size.saturating_sub(offset as u64) as u32);
         let mut buf = vec![0; read_size as usize];
-        match self
-            .remote_file_manager
-            .read(ino, &mut buf, read_size as u64)
-        {
+        match self.remote_file_manager.read(ino, &mut buf, offset as u64) {
             Ok(_) => {}
             Err(e) => {
                 debug!("[RFuseFS][read] -> Read data. {}", e);
@@ -746,7 +748,10 @@ impl Filesystem for RFuseFS {
         };
 
         let write_time = SystemTime::now();
-        match self.remote_file_manager.write_file(ino, data, &write_time) {
+        match self
+            .remote_file_manager
+            .write_file(ino, data, &write_time, offset as u64)
+        {
             Ok(_) => {}
             Err(e) => {
                 debug!("[RFuseFS][write] -> Write data. {}", e);

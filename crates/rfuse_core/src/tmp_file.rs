@@ -48,10 +48,11 @@ pub trait TmpFileTrait: Send {
         tf: &TmpFile,
         data: &[u8],
         write_time: &SystemTime,
+        offset: u64,
     ) -> Result<(), TmpFileError> {
         warn!(
-            "[TmpFileTrait][Not Implemented] node: {:#?}, write(data: {:#?}), write_time: {:#?}",
-            tf, data, write_time
+            "[TmpFileTrait][Not Implemented] node: {:#?}, write(data: {:#?}), write_time: {:#?}, offset: {:#?}",
+            tf, data, write_time, offset
         );
         Err(TmpFileError::WriteError)
     }

@@ -6,6 +6,7 @@ use std::{
 };
 
 use common::{rfuses_spawn_run, run_command_with_status, TestContext};
+use rand::Rng;
 
 mod common;
 
@@ -66,6 +67,47 @@ async fn test_read_file() {
             test_file_mount_meta.file_type()
         );
     };
+    rfuses_spawn_run!(
+        {
+            context
+                .link()
+                .arg(context.origin_dir.path())
+                .arg(context.mount_dir.path())
+        },
+        closure
+    );
+}
+
+#[tokio::test]
+async fn test_read_exact_file_continuous() {
+    let context = TestContext::new();
+
+    let mount_path = context.mount_dir.to_owned();
+    let origin_path = context.origin_dir.to_owned();
+
+    let test_file = "test_read_exact_file_continuous.txt";
+    let mut test_file_origin = origin_path.clone();
+    test_file_origin.push(test_file);
+    const FILE_SIZE: usize = 1024 * 1024 * 10; // 10M
+    let mut content = vec![0u8; FILE_SIZE];
+    rand::thread_rng().fill(&mut content[..]);
+
+    let mut file = File::create(&test_file_origin).unwrap();
+    file.write_all(&content).unwrap();
+    assert!(Path::new(&test_file_origin).exists());
+
+    let closure = || {
+        let mut test_file_mount = mount_path.clone();
+        test_file_mount.push(test_file);
+        let mut buf = vec![0u8; FILE_SIZE];
+        let mut f = fs::OpenOptions::new()
+            .read(true)
+            .open(&test_file_mount)
+            .unwrap();
+        f.read_exact(&mut buf).unwrap();
+        assert_eq!(content, &buf[..]);
+    };
+
     rfuses_spawn_run!(
         {
             context
