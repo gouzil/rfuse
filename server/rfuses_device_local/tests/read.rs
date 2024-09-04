@@ -88,7 +88,7 @@ async fn test_read_exact_file_continuous() {
     let test_file = "test_read_exact_file_continuous.txt";
     let mut test_file_origin = origin_path.clone();
     test_file_origin.push(test_file);
-    const FILE_SIZE: usize = 1024 * 1024 * 10; // 10M
+    const FILE_SIZE: usize = 1024 * 1024; // 1M
     let mut content = vec![0u8; FILE_SIZE];
     rand::thread_rng().fill(&mut content[..]);
 

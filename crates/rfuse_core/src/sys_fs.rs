@@ -761,10 +761,9 @@ impl Filesystem for RFuseFS {
         };
         inode.attr.mtime = write_time;
         inode.attr.ctime = write_time;
-        // if data.len() + offset as usize > inode.attr.size as usize {
-        //     inode.attr.size = (data.len() + offset as usize) as u64;
-        // }
-        inode.attr.size = data.len() as u64;
+        if data.len() + offset as usize > inode.attr.size as usize {
+            inode.attr.size = (data.len() + offset as usize) as u64;
+        }
         reply.written(data.len() as u32);
     }
 
