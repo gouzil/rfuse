@@ -14,9 +14,10 @@ impl TmpFileTrait for LocalFS {
         tf: &TmpFile,
         data: &[u8],
         write_time: &SystemTime,
+        offset: u64,
     ) -> Result<(), TmpFileError> {
         let _guard = tf.lock.write().unwrap();
-        local_disk::write(tf, data, write_time)
+        local_disk::write(tf, data, write_time, offset)
     }
 
     fn read_all(&self, tf: &TmpFile) -> Result<Vec<u8>, TmpFileError> {

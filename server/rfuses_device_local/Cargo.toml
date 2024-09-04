@@ -38,3 +38,5 @@ insta = { version = "1.36.1", features = ["filters", "json"] }
 regex.workspace = true
 tokio = { workspace = true, features = ["process", "io-util"] }
 nix = { workspace = true, features = ["signal"] }
+criterion = { workspace = true }
+rand = { workspace = true }

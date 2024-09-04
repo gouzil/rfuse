@@ -12,8 +12,8 @@ use rfuse_core::{
 };
 use std::{
     fs,
-    io::{Read, Write},
-    os::unix::fs::{MetadataExt, PermissionsExt},
+    io::{Read, Seek, SeekFrom, Write},
+    os::unix::fs::{FileExt, MetadataExt, PermissionsExt},
     time::SystemTime,
 };
 
@@ -35,7 +35,12 @@ fn change_time(path: &str, atime: &TimeSpec, mtime: &TimeSpec) -> Result<(), Tmp
     }
 }
 
-pub fn write(tf: &TmpFile, data: &[u8], write_time: &SystemTime) -> Result<(), TmpFileError> {
+pub fn write(
+    tf: &TmpFile,
+    data: &[u8],
+    write_time: &SystemTime,
+    offset: u64,
+) -> Result<(), TmpFileError> {
     let mut file = fs::OpenOptions::new()
         .append(false)
         .create(true)
@@ -44,6 +49,7 @@ pub fn write(tf: &TmpFile, data: &[u8], write_time: &SystemTime) -> Result<(), T
         .open(tf.path.clone() + tf.file_name.as_str())
         .unwrap();
     debug!("write to file: {}", tf.path.clone() + tf.file_name.as_str());
+    file.seek(SeekFrom::Start(offset)).unwrap();
     match file.write_all(data) {
         Ok(()) => {
             debug!("Successfully write {} bytes to the file.", data.len());
@@ -53,6 +59,7 @@ pub fn write(tf: &TmpFile, data: &[u8], write_time: &SystemTime) -> Result<(), T
             return Err(TmpFileError::WriteError);
         }
     };
+    let _ = file.flush();
 
     match change_time(
         &(tf.path.clone() + tf.file_name.as_str()),
@@ -90,7 +97,7 @@ pub fn read_all(tf: &TmpFile) -> Result<Vec<u8>, TmpFileError> {
 }
 
 pub fn read_exact(tf: &TmpFile, buf: &mut [u8], offset: u64) -> Result<(), TmpFileError> {
-    let mut file = match fs::OpenOptions::new()
+    let file = match fs::OpenOptions::new()
         .read(true)
         .open(tf.path.clone() + tf.file_name.as_str())
     {
@@ -100,7 +107,8 @@ pub fn read_exact(tf: &TmpFile, buf: &mut [u8], offset: u64) -> Result<(), TmpFi
             return Err(TmpFileError::ReadError);
         }
     };
-    let fr = file.read_exact(&mut buf[..offset as usize]);
+
+    let fr = file.read_exact_at(buf, offset);
     match fr {
         Ok(()) => {
             debug!("Successfully read {} bytes from the file.", buf.len());

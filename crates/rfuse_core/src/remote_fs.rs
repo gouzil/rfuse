@@ -100,6 +100,7 @@ impl RemoteFileManager {
         ino: u64,
         data: &[u8],
         write_time: &SystemTime,
+        offset: u64,
     ) -> Result<(), &str> {
         let tmp = match self.tmp_file_map.get(&ino) {
             Some(t) => t,
@@ -111,7 +112,7 @@ impl RemoteFileManager {
                 return Err("file not found");
             }
         };
-        match self.tmp_file_trait.write(tmp, data, write_time) {
+        match self.tmp_file_trait.write(tmp, data, write_time, offset) {
             Ok(_) => {}
             Err(e) => {
                 error!("[RemoteFileManager][write_file] failed: {}", e);
