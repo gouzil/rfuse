@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use colored::Colorize;
 use directories::ProjectDirs;
 use fern;
@@ -51,8 +53,16 @@ pub fn init_log(level: &LogLevel) {
     } else {
         // 查看文件夹是否存在
         let base_path = ProjectDirs::from("", "", "rfuse").unwrap();
-        let mut log_dir_path = base_path.runtime_dir().unwrap().to_owned();
-        log_dir_path.push("logs/");
+
+        let log_dir_path = {
+            if let Some(runtime_dir) = base_path.runtime_dir() {
+                let mut log_path = runtime_dir.to_owned();
+                log_path.push("logs/");
+                log_path
+            } else {
+                PathBuf::from("./logs/")
+            }
+        };
 
         // 创建文件夹
         if !log_dir_path.is_dir() {
