@@ -288,6 +288,28 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 
 [[package]]
+name = "codspeed"
+version = "2.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c370701439f48f9da21ce48e0505c7e24bfa046e8132a4867c36001df0ded99f"
+dependencies = [
+ "colored",
+ "libc",
+ "serde_json",
+]
+
+[[package]]
+name = "codspeed-criterion-compat"
+version = "2.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "886eb6c3d782e1b45a2b282abbff5c9d1f21dcf36868979afff174bbc6c93b11"
+dependencies = [
+ "codspeed",
+ "colored",
+ "criterion",
+]
+
+[[package]]
 name = "colorchoice"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1180,6 +1202,7 @@ dependencies = [
  "assert_fs",
  "chrono",
  "clap",
+ "codspeed-criterion-compat",
  "colored",
  "criterion",
  "directories",

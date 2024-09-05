@@ -34,9 +34,14 @@ tempfile.workspace = true
 assert_fs = { version = "1.1.2" }
 etcetera.workspace = true
 fs-err.workspace = true
-insta = { version = "1.36.1", features = ["filters", "json"] }
+insta = { version = "1.39.0", features = ["filters", "json"] }
 regex.workspace = true
 tokio = { workspace = true, features = ["process", "io-util"] }
 nix = { workspace = true, features = ["signal"] }
 criterion = { workspace = true }
 rand = { workspace = true }
+codspeed-criterion-compat = "2.7.0"
+
+[[bench]]
+name = "benchmark_create"
+harness = false
