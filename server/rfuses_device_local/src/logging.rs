@@ -51,6 +51,7 @@ pub fn init_log(level: &LogLevel) {
     if cfg!(debug_assertions) {
         logger = logger.chain(std::io::stdout());
     } else {
+        logger = logger.chain(std::io::stdout());
         // 查看文件夹是否存在
         let base_path = ProjectDirs::from("", "", "rfuse").unwrap();
 

@@ -27,12 +27,15 @@ jobs:
           cache-target: release
           bins: cargo-codspeed
 
-      - name: run benchmark
-        run: cargo bench
+      # - name: run benchmark
+      #   run: cargo bench
+
+      - name: Build the benchmark target(s)
+        run: cargo codspeed build
 
       # 会有权限错误，暂不清楚
-      # - name: Run the benchmarks
-      #   uses: CodSpeedHQ/action@v3
-      #   with:
-      #     run: cargo codspeed run
-      #     token: ${{ secrets.CODSPEED_TOKEN }}
+      - name: Run the benchmarks
+        uses: CodSpeedHQ/action@v3
+        with:
+          run: cargo codspeed run
+          token: ${{ secrets.CODSPEED_TOKEN }}
