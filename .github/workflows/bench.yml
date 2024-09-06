@@ -36,6 +36,8 @@ jobs:
       # 会有权限错误，暂不清楚
       - name: Run the benchmarks
         uses: CodSpeedHQ/action@v3
+        env:
+          RUST_BACKTRACE: full
         with:
           run: cargo codspeed run
           token: ${{ secrets.CODSPEED_TOKEN }}
