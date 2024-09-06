@@ -30,6 +30,9 @@ jobs:
       - name: Build the benchmark target(s)
         run: cargo codspeed build
 
+      - name: run benchmark
+        run: cargo codspeed run
+
       - name: Run the benchmarks
         uses: CodSpeedHQ/action@v3
         env:
