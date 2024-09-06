@@ -20,23 +20,18 @@ jobs:
             sudo apt-get update
             sudo apt-get install fuse3 libfuse3-dev
 
-      # - name: Setup rust toolchain, cache and cargo-codspeed binary
-      #   uses: moonrepo/setup-rust@v0
-      #   with:
-      #     channel: stable
-      #     cache-target: release
-      #     bins: cargo-codspeed
-
-      - name: Install latest cargo-codspeed release
-        uses: taiki-e/install-action@v2 # v2
+      - name: Setup rust toolchain, cache and cargo-codspeed binary
+        uses: moonrepo/setup-rust@v0
         with:
-          tool: cargo-codspeed
+          channel: stable
+          cache-target: release
+          bins: cargo-codspeed
 
       - name: Build the benchmark target(s)
-        run: cargo codspeed build
+        run: cargo codspeed build --features codspeed
 
       - name: run benchmark
-        run: cargo codspeed run
+        run: cargo codspeed run --features codspeed
 
       - name: Run the benchmarks
         uses: CodSpeedHQ/action@v3
