@@ -35,5 +35,5 @@ jobs:
         env:
           RUST_BACKTRACE: 1
         with:
-          run: cargo codspeed run
+          run: sudo cargo codspeed run
           token: ${{ secrets.CODSPEED_TOKEN }}
