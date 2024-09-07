@@ -12,6 +12,8 @@ on:
 jobs:
   benchmarks:
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
     steps:
       - uses: actions/checkout@v3
 
@@ -19,6 +21,7 @@ jobs:
         run: |
             sudo apt-get update
             sudo apt-get install fuse3 libfuse3-dev
+            sudo echo "user_allow_other" >> /etc/fuse.conf
 
       - name: Setup rust toolchain, cache and cargo-codspeed binary
         uses: moonrepo/setup-rust@v0
@@ -27,15 +30,15 @@ jobs:
           cache-target: release
           bins: cargo-codspeed
 
-      - name: run benchmark
-        run: cargo bench
+      # - name: run benchmark
+      #   run: cargo bench
 
       # 会有权限错误，暂不清楚
-      # - name: Build the benchmark target(s)
-      #   run: cargo codspeed build
+      - name: Build the benchmark target(s)
+        run: cargo codspeed build
 
-      # - name: Run the benchmarks
-      #   uses: CodSpeedHQ/action@v3
-      #   with:
-      #     run: cargo codspeed run
-      #     token: ${{ secrets.CODSPEED_TOKEN }}
+      - name: Run the benchmarks
+        uses: CodSpeedHQ/action@v3
+        with:
+          run: cargo codspeed run
+          token: ${{ secrets.CODSPEED_TOKEN }}
