@@ -172,8 +172,10 @@ macro_rules! rfuses_spawn_run {
     ($cmd:expr, $func:expr) => {{
         let (tx, rx) = tokio::sync::mpsc::channel(1);
         let handle = tokio::spawn(async move {
-            let (_, _, status) =
+            let (_, output, status) =
                 run_command_with_status($cmd, Vec::<(String, String)>::new(), Some(rx)).await;
+            println!("{:?}", output);
+            println!("{:?}", status);
             assert!(status.success());
         });
 
