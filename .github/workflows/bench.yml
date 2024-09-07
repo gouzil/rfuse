@@ -39,6 +39,6 @@ jobs:
         env:
           RUST_BACKTRACE: full
         with:
-          shell: bash sudo
+          shell: nix develop --command bash sudo {0}
           run: cargo codspeed run
           token: ${{ secrets.CODSPEED_TOKEN }}
