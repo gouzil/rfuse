@@ -39,5 +39,5 @@ jobs:
         env:
           RUST_BACKTRACE: full
         with:
-          run: sudo apt-get install fuse3 libfuse3-dev && cargo codspeed run
+          run: cargo codspeed run
           token: ${{ secrets.CODSPEED_TOKEN }}
