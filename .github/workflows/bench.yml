@@ -17,9 +17,10 @@ jobs:
 
       - name: install package
         run: |
+            sudo echo "user_allow_other" >> /etc/fuse.conf
             sudo apt-get update
             sudo apt-get install fuse3 libfuse3-dev
-            sudo echo "user_allow_other" >> /etc/fuse.conf
+            cat /etc/fuse.conf
 
       - name: Setup rust toolchain, cache and cargo-codspeed binary
         uses: moonrepo/setup-rust@v0
