@@ -19,6 +19,7 @@ jobs:
         run: |
             sudo apt-get update
             sudo apt-get install fuse3 libfuse3-dev
+            sudo echo "user_allow_other" >> /etc/fuse.conf
 
       - name: Setup rust toolchain, cache and cargo-codspeed binary
         uses: moonrepo/setup-rust@v0
@@ -35,10 +36,7 @@ jobs:
 
       # 会有权限错误，暂不清楚
       - name: Run the benchmarks
-        uses: CathalMullan/action@main
-        env:
-          RUST_BACKTRACE: full
+        uses: CodSpeedHQ/action@v3
         with:
-          shell: bash su root && {0}
           run: cargo codspeed run
           token: ${{ secrets.CODSPEED_TOKEN }}
