@@ -20,7 +20,7 @@ jobs:
       - name: install package
         run: |
           apt-get update
-          apt-get install fuse3 libfuse3-dev
+          apt-get install fuse3 libfuse3-dev libfuse-dev pkg-config libssl-dev gcc g++ -y
           echo "user_allow_other" >> /etc/fuse.conf
 
       - name: Setup rust toolchain, cache and cargo-codspeed binary
