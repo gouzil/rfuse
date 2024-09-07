@@ -42,4 +42,3 @@ jobs:
           run: cargo codspeed run
           token: ${{ secrets.CODSPEED_TOKEN }}
           no-sudo: true
-          no-pip-install: true
