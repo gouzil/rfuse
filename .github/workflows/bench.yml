@@ -40,5 +40,5 @@ jobs:
           RUST_BACKTRACE: full
         with:
           shell: bash -el {0}
-          run: cargo codspeed run
+          run: sudo cargo codspeed run
           token: ${{ secrets.CODSPEED_TOKEN }}
