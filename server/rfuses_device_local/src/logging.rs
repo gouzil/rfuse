@@ -44,8 +44,10 @@ pub fn init_log(level: &LogLevel) {
                 ));
             }
         })
-        .level(level.level_filter())
-        .level_for("fuser", log::LevelFilter::Warn);
+        .level(level.level_filter());
+    // .level_for("fuser", log::LevelFilter::Warn);
+
+    logger = logger.chain(std::io::stdout());
 
     // debug 模式下输出到 stderr
     if cfg!(debug_assertions) {
