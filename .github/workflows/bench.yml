@@ -22,6 +22,7 @@ jobs:
           apt-get update
           apt-get install fuse3 libfuse3-dev libfuse-dev pkg-config libssl-dev gcc g++ -y
           echo "user_allow_other" >> /etc/fuse.conf
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
       - name: Setup rust toolchain, cache and cargo-codspeed binary
         uses: moonrepo/setup-rust@v0
