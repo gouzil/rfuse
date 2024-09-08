@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:22.04
-      options: --security-opt=seccomp=unconfined --cap-add=ALL --device=/dev/fuse
+      options: --security-opt=seccomp=unconfined --privileged=true --device=/dev/fuse
     steps:
       - uses: actions/checkout@v4
 
