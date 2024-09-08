@@ -178,7 +178,7 @@ macro_rules! rfuses_spawn_run {
         });
 
         // 等待fuse完全启动
-        tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+        tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
         // 运行测试代码
         $func();
