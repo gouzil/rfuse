@@ -21,7 +21,7 @@ jobs:
       - name: install package
         run: |
           apt-get update
-          apt-get install fuse3 libfuse3-dev libfuse-dev pkg-config libssl-dev gcc g++ curl wget build-essential lsb-core -y
+          apt-get install fuse3 libfuse3-dev libfuse-dev pkg-config libssl-dev gcc g++ curl wget build-essential lsb-core git -y
           echo "user_allow_other" >> /etc/fuse.conf
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
