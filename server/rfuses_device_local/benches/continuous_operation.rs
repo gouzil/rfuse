@@ -1,5 +1,7 @@
 use common::{rfuses_spawn_run, run_command_with_status, TestContext};
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{
+    criterion_group, criterion_main, measurement::WallTime, BenchmarkId, Criterion, Throughput,
+};
 use rand::Rng;
 use std::{
     fs::{self, File},
@@ -12,7 +14,7 @@ mod common;
 // const FILE_SIZE: usize = 1024 * 1024 * 10; // 10 MB
 const FILE_SIZE: usize = 1024 * 1024;
 
-fn benchmark_file_continuous_current_thread(c: &mut Criterion) {
+fn benchmark_file_continuous_current_thread(c: &mut Criterion<WallTime>) {
     let rt = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
@@ -21,7 +23,7 @@ fn benchmark_file_continuous_current_thread(c: &mut Criterion) {
     benchmark_file_continuous(c, rt);
 }
 
-fn benchmark_file_continuous(c: &mut Criterion, rt: Runtime) {
+fn benchmark_file_continuous(c: &mut Criterion<WallTime>, rt: Runtime) {
     let context = TestContext::new();
 
     let mount_path = context.mount_dir.to_owned();
@@ -37,9 +39,9 @@ fn benchmark_file_continuous(c: &mut Criterion, rt: Runtime) {
         let mut data = vec![0u8; FILE_SIZE];
         rand::thread_rng().fill(&mut data[..]);
 
-        let mut group = c.benchmark_group("file continuous operation");
-        group.throughput(criterion::Throughput::Bytes(data.len() as u64));
-        group.bench_function("write", |b| {
+        let mut group = c.benchmark_group("file_continuous");
+        group.throughput(Throughput::Bytes(data.len() as u64));
+        group.bench_function(BenchmarkId::from_parameter("write"), |b| {
             b.iter(|| {
                 let mut f = fs::OpenOptions::new()
                     .read(true)
@@ -59,7 +61,7 @@ fn benchmark_file_continuous(c: &mut Criterion, rt: Runtime) {
         file.write_all(&data).unwrap();
         file.flush().unwrap();
 
-        group.bench_function("read", |b| {
+        group.bench_function(BenchmarkId::from_parameter("read"), |b| {
             b.iter(|| {
                 let mut f = fs::OpenOptions::new()
                     .read(true)
