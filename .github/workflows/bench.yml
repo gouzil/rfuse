@@ -25,10 +25,6 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - name: update project
-        run: |
-          git pull
-
       # - name: link project
       #   run: |
       #     mkdir -p /home/runner/work/rfuse
