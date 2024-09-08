@@ -21,7 +21,7 @@ jobs:
       - name: install package
         run: |
           apt-get update
-          apt-get install fuse3 libfuse3-dev libfuse-dev pkg-config libssl-dev gcc g++ curl wget build-essential -y
+          apt-get install fuse3 libfuse3-dev libfuse-dev pkg-config libssl-dev gcc g++ curl wget build-essential lsb-core -y
           echo "user_allow_other" >> /etc/fuse.conf
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
@@ -29,6 +29,9 @@ jobs:
         run: |
           mkdir -p /home/runner/work/rfuse
           ln -s /__w/rfuse/rfuse/ /home/runner/work/rfuse/rfuse
+
+      - name: Fix git owner
+        run: git config --global --add safe.directory "*"
 
       - name: Setup rust toolchain, cache and cargo-codspeed binary
         uses: moonrepo/setup-rust@v1
