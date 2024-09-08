@@ -78,7 +78,6 @@ fn benchmark_file_continuous(c: &mut Criterion, rt: Runtime) {
                     .link()
                     .arg(context.origin_dir.path())
                     .arg(context.mount_dir.path())
-                    .arg("-v")
             },
             closure
         );

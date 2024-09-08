@@ -43,9 +43,6 @@ jobs:
           cache-target: release
           bins: cargo-codspeed
 
-      - name: install cargo-codspeed
-        run: curl --proto '=https' --tlsv1.2 -LsSf https://github.com/CodSpeedHQ/runner/releases/download/v3.0.0/codspeed-runner-installer.sh | sh
-
       # - name: run benchmark
       #   run: cargo bench
 
@@ -53,11 +50,8 @@ jobs:
       - name: Build the benchmark target(s)
         run: cargo codspeed build
 
-      # - name: Run the benchmarks
-      #   uses: CodSpeedHQ/action@v3
-      #   with:
-      #     run: cargo codspeed run
-      #     token: ${{ secrets.CODSPEED_TOKEN }}
-
       - name: Run the benchmarks
-        run: codspeed run --token ${{ secrets.CODSPEED_TOKEN }} cargo codspeed run
+        uses: CodSpeedHQ/action@v2.4.2
+        with:
+          run: cargo codspeed run
+          token: ${{ secrets.CODSPEED_TOKEN }}
