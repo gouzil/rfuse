@@ -30,6 +30,7 @@ jobs:
           mkdir -p /home/runner/work/rfuse
           ln -s /__w/rfuse/rfuse /home/runner/work/rfuse/rfuse
           tree /home/runner/work/rfuse/rfuse
+          cd /home/runner/work/rfuse/rfuse && git pull
 
       - name: init git
         run: |
