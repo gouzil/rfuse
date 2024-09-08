@@ -14,14 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:22.04
-      options: --security-opt=seccomp=unconfined
+      options: --security-opt apparmor:unconfined --cap-add=SYS_ADMIN --device /dev/fuse
     steps:
       - uses: actions/checkout@v4
 
       - name: install package
         run: |
           apt-get update
-          apt-get install fuse3 libfuse3-dev libfuse-dev pkg-config libssl-dev gcc g++ curl wget -y
+          apt-get install fuse3 libfuse3-dev libfuse-dev pkg-config libssl-dev gcc g++ curl wget build-essential -y
           echo "user_allow_other" >> /etc/fuse.conf
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
