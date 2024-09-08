@@ -30,8 +30,11 @@ jobs:
           mkdir -p /home/runner/work/rfuse
           ln -s /__w/rfuse/rfuse/ /home/runner/work/rfuse/rfuse
 
-      - name: Fix git owner
-        run: git config --global --add safe.directory "*"
+      - name: init git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git config --global --add safe.directory "*"
 
       - name: Setup rust toolchain, cache and cargo-codspeed binary
         uses: moonrepo/setup-rust@v1
