@@ -84,5 +84,8 @@ fn benchmark_file_continuous(c: &mut Criterion, rt: Runtime) {
     });
 }
 
-criterion_group!(benches_create, benchmark_file_continuous_current_thread);
-criterion_main!(benches_create);
+criterion_group!(
+    continuous_operation,
+    benchmark_file_continuous_current_thread
+);
+criterion_main!(continuous_operation);

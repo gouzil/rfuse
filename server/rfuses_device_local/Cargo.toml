@@ -47,5 +47,5 @@ criterion = { workspace = true }
 codspeed = ["codspeed-criterion-compat"]
 
 [[bench]]
-name = "benchmark_create"
+name = "continuous_operation"
 harness = false
