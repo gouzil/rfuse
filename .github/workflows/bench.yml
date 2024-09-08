@@ -25,13 +25,6 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      # - name: link project
-      #   run: |
-      #     mkdir -p /home/runner/work/rfuse
-      #     ln -s /__w/rfuse/rfuse /home/runner/work/rfuse/rfuse
-      #     tree /home/runner/work/rfuse/rfuse
-      #     cd /home/runner/work/rfuse/rfuse && git pull
-
       - name: init git
         run: |
           git config --global user.name "github-actions"
@@ -45,10 +38,6 @@ jobs:
           cache-target: release
           bins: cargo-codspeed
 
-      # - name: run benchmark
-      #   run: cargo bench
-
-      # 会有权限错误，暂不清楚
       - name: Build the benchmark target(s)
         run: cargo codspeed build
 
