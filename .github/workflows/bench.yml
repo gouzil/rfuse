@@ -17,6 +17,8 @@ jobs:
       options: --security-opt=seccomp=unconfined --privileged=true --device=/dev/fuse
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: /home/runner/work/rfuse/rfuse/
 
       - name: install package
         run: |
