@@ -25,12 +25,16 @@ jobs:
           echo "user_allow_other" >> /etc/fuse.conf
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-      - name: link project
+      - name: update project
         run: |
-          mkdir -p /home/runner/work/rfuse
-          ln -s /__w/rfuse/rfuse /home/runner/work/rfuse/rfuse
-          tree /home/runner/work/rfuse/rfuse
-          cd /home/runner/work/rfuse/rfuse && git pull
+          git pull
+
+      # - name: link project
+      #   run: |
+      #     mkdir -p /home/runner/work/rfuse
+      #     ln -s /__w/rfuse/rfuse /home/runner/work/rfuse/rfuse
+      #     tree /home/runner/work/rfuse/rfuse
+      #     cd /home/runner/work/rfuse/rfuse && git pull
 
       - name: init git
         run: |
