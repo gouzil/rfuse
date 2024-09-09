@@ -13,7 +13,7 @@ jobs:
   benchmarks:
     runs-on: ubuntu-latest
     container:
-      image: ubuntu:22.04
+      image: ubuntu:24.04
       options: --security-opt=seccomp=unconfined --privileged=true --device=/dev/fuse
     steps:
       - name: install package
