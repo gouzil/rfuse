@@ -1,11 +1,22 @@
-use codspeed_criterion_compat::{
+pub mod self_criterion {
+    //! This module re-exports the criterion API but picks the right backend depending on whether
+    //! the benchmarks are built to run locally or with codspeed
+
+    #[cfg(not(feature = "codspeed"))]
+    pub use criterion::*;
+
+    #[cfg(feature = "codspeed")]
+    pub use codspeed_criterion_compat::*;
+}
+
+use common::{rfuses_spawn_run, run_command_with_status, TestContext};
+use criterion::{
     criterion_group, criterion_main, measurement::WallTime, BenchmarkId, Criterion, Throughput,
 };
-use common::{rfuses_spawn_run, run_command_with_status, TestContext};
 use rand::Rng;
 use std::{
     fs::{self, File},
-    io::Write,
+    io::{Read, Write},
 };
 use tokio::runtime::Runtime;
 #[path = "../tests/common/mod.rs"]
@@ -54,23 +65,23 @@ fn benchmark_file_continuous(c: &mut Criterion<WallTime>, rt: Runtime) {
             });
         });
 
-        // let mut file = fs::OpenOptions::new()
-        //     .read(true)
-        //     .write(true)
-        //     .open(&test_file_mount)
-        //     .unwrap();
-        // file.write_all(&data).unwrap();
-        // file.flush().unwrap();
+        let mut file = fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(&test_file_mount)
+            .unwrap();
+        file.write_all(&data).unwrap();
+        file.flush().unwrap();
 
-        // group.bench_function(BenchmarkId::from_parameter("read"), |b| {
-        //     b.iter(|| {
-        //         let mut f = fs::OpenOptions::new()
-        //             .read(true)
-        //             .open(&test_file_mount)
-        //             .unwrap();
-        //         f.read_exact(&mut data[..]).unwrap();
-        //     });
-        // });
+        group.bench_function(BenchmarkId::from_parameter("read"), |b| {
+            b.iter(|| {
+                let mut f = fs::OpenOptions::new()
+                    .read(true)
+                    .open(&test_file_mount)
+                    .unwrap();
+                f.read_exact(&mut data[..]).unwrap();
+            });
+        });
         group.finish();
     };
 
