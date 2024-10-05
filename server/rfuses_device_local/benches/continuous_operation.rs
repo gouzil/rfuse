@@ -13,8 +13,8 @@ use tokio::runtime::Runtime;
 #[path = "../tests/common/mod.rs"]
 mod common;
 
-// const FILE_SIZE: usize = 1024 * 1024 * 10; // 10 MB
-const FILE_SIZE: usize = 1024 * 1024;
+// const FILE_SIZE: usize = 1024 * 1024;
+const FILE_SIZE: usize = 1024 * 1024 * 10; // 10 MB
 
 fn benchmark_file_continuous_current_thread(c: &mut Criterion<WallTime>) {
     let rt = tokio::runtime::Builder::new_current_thread()
