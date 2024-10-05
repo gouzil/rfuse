@@ -1,19 +1,10 @@
-pub mod self_criterion {
-    //! This module re-exports the criterion API but picks the right backend depending on whether
-    //! the benchmarks are built to run locally or with codspeed
+mod base_fn;
 
-    #[cfg(not(feature = "codspeed"))]
-    pub use criterion::*;
-
-    #[cfg(feature = "codspeed")]
-    pub use codspeed_criterion_compat::*;
-}
-
-use common::{rfuses_spawn_run, run_command_with_status, TestContext};
-use rand::Rng;
-use self_criterion::{
+use base_fn::self_criterion::{
     criterion_group, criterion_main, measurement::WallTime, BenchmarkId, Criterion, Throughput,
 };
+use common::{rfuses_spawn_run, run_command_with_status, TestContext};
+use rand::Rng;
 use std::{
     fs::{self, File},
     io::{Read, Write},
