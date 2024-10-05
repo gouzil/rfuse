@@ -10,10 +10,10 @@ pub mod self_criterion {
 }
 
 use common::{rfuses_spawn_run, run_command_with_status, TestContext};
-use criterion::{
+use rand::Rng;
+use self_criterion::{
     criterion_group, criterion_main, measurement::WallTime, BenchmarkId, Criterion, Throughput,
 };
-use rand::Rng;
 use std::{
     fs::{self, File},
     io::{Read, Write},
