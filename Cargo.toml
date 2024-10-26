@@ -21,7 +21,7 @@ fern = { version = "0.6.2", features = ["date-based"]}
 clap = { version = "4.5.13", features = ["derive"]}
 colored = { version = "2.1.0" }
 chrono = { version = "0.4.31", default-features = false, features = ["clock"] }
-notify = { version ="6.1.1" }
+notify = { version ="7.0.0" }
 anyhow = "1.0.86"
 tokio = { version = "1.40.0", features = ["macros", "rt-multi-thread", "signal", "sync", "time"] }
 # tokio-stream = { version = "0.1.15"}
