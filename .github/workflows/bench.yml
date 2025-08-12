@@ -23,7 +23,7 @@ jobs:
           echo "user_allow_other" >> /etc/fuse.conf
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: init git
         run: |

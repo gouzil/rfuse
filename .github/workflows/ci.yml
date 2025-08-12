@@ -19,7 +19,7 @@ jobs:
         build_type: [debug, release]
     name: Ubuntu, ${{ matrix.target }}. ${{ matrix.build_type }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -55,7 +55,7 @@ jobs:
     runs-on: macos-latest
     name: Macos, ${{ matrix.os }}. ${{ matrix.build_type }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/cache@v4
         id: cargo-cache
         with:
